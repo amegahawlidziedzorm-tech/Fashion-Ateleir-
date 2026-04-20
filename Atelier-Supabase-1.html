@@ -1,0 +1,2418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Atelier — Fashion Studio CRM</title>
+<meta name="description" content="Atelier — Luxury Fashion Designer CRM with Supabase auth."/>
+<meta name="theme-color" content="#1C1C1E"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="Atelier"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23B8975A'/><circle cx='16' cy='20' r='8' stroke='%231C1C1E' stroke-width='3.5' fill='none'/><circle cx='16' cy='44' r='8' stroke='%231C1C1E' stroke-width='3.5' fill='none'/><line x1='48' y1='8' x2='20.5' y2='35.5' stroke='%231C1C1E' stroke-width='3.5' stroke-linecap='round'/><line x1='40' y1='40' x2='48' y2='48' stroke='%231C1C1E' stroke-width='3.5' stroke-linecap='round'/><line x1='20.5' y1='28.5' x2='28' y2='36' stroke='%231C1C1E' stroke-width='3.5' stroke-linecap='round'/></svg>"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<!-- Supabase JS SDK v2 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ═══════════════════════════════════════════════
+   RESET & VARIABLES
+═══════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --cream:#F9F6F1;--cream2:#F0EBE3;--cream3:#E8DDD0;
+  --white:#FFFFFF;--charcoal:#1C1C1E;--charcoal2:#2E2E30;--charcoal3:#3A3A3C;
+  --gold:#B8975A;--gold2:#D4AF71;--gold3:#F5EDD8;--gold4:#8B6914;
+  --rose:#C4796A;--rose2:#F5E8E5;--rose3:#8B3A2A;
+  --blue:#2563EB;--blue2:#EFF6FF;
+  --green:#15803D;--green2:#F0FDF4;
+  --purple:#7C3AED;--purple2:#F5F3FF;
+  --orange:#C2410C;--orange2:#FFF7ED;
+  --t1:#1C1C1E;--t2:#6B6B6E;--t3:#9A9A9D;
+  --border:#E8E2D9;--border2:#D4CCC0;
+  --sh1:0 1px 3px rgba(28,28,30,.07);
+  --sh2:0 4px 16px rgba(28,28,30,.10);
+  --sh3:0 12px 40px rgba(28,28,30,.15);
+  --r:4px;--rl:8px;--rxl:12px;
+  --sw:240px;
+  --transition:all 0.2s ease;
+}
+html,body{height:100%;overflow-x:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--t1);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4,h5{font-family:'Cormorant Garamond',serif;font-weight:500;line-height:1.2;}
+input,textarea,select,button{font-family:'DM Sans',sans-serif;}
+input,textarea,select{font-size:13px;outline:none;background:var(--white);border:1.5px solid var(--border);border-radius:var(--r);padding:9px 12px;color:var(--t1);width:100%;transition:var(--transition);}
+input:focus,textarea:focus,select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,151,90,.12);}
+input::placeholder,textarea::placeholder{color:var(--t3);}
+button{cursor:pointer;transition:var(--transition);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes slideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+@keyframes bounceIn{0%{transform:scale(.8);opacity:0}60%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes spinRing{to{transform:rotate(360deg)}}
+
+.fu{animation:fadeUp .35s ease both;}
+.fu1{animation:fadeUp .35s .05s ease both;}
+.fu2{animation:fadeUp .35s .10s ease both;}
+.fu3{animation:fadeUp .35s .15s ease both;}
+.fu4{animation:fadeUp .35s .20s ease both;}
+.fu5{animation:fadeUp .35s .25s ease both;}
+.fi{animation:fadeIn .25s ease both;}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.app{display:flex;min-height:100vh;}
+.sidebar{width:var(--sw);min-height:100vh;background:var(--charcoal);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;transition:transform .3s ease;}
+.main{margin-left:var(--sw);flex:1;min-height:100vh;}
+.page{padding:36px 40px;max-width:1280px;}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+.sb-brand{padding:28px 22px 20px;}
+.sb-logo{display:flex;align-items:center;gap:9px;}
+.sb-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:var(--r);display:flex;align-items:center;justify-content:center;}
+.sb-logo-text{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--white);letter-spacing:.04em;}
+.sb-nav{flex:1;padding:8px 12px;}
+.sb-nav-section{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:14px 10px 6px;}
+.sb-link{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:var(--r);color:rgba(255,255,255,.55);font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);border:none;background:none;width:100%;text-align:left;margin-bottom:1px;}
+.sb-link:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.85);}
+.sb-link.active{background:rgba(184,151,90,.15);color:var(--gold2);}
+.sb-link .sb-icon{width:18px;text-align:center;font-size:15px;flex-shrink:0;}
+.sb-footer{padding:16px 18px;border-top:1px solid rgba(255,255,255,.06);}
+.sb-user{display:flex;align-items:center;gap:10px;}
+.sb-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:14px;font-weight:600;color:var(--white);flex-shrink:0;}
+.sb-user-info{flex:1;min-width:0;}
+.sb-user-name{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-user-role{font-size:10px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+.sb-overlay.open{display:block;}
+
+/* ═══════════════════════════════════════════════
+   TOPBAR
+═══════════════════════════════════════════════ */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:32px;flex-wrap:wrap;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-size:36px;font-weight:500;}
+.topbar-sub{font-size:13px;color:var(--t2);margin-top:1px;}
+.topbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.menu-btn{display:none;width:36px;height:36px;align-items:center;justify-content:center;border:1.5px solid var(--border);border-radius:var(--r);background:var(--white);font-size:18px;color:var(--t1);cursor:pointer;}
+
+/* ═══════════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════════ */
+.page-section{display:none;}
+.page-section.active{display:block;}
+
+/* ═══════════════════════════════════════════════
+   CARDS & STATS
+═══════════════════════════════════════════════ */
+.card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:24px;box-shadow:var(--sh1);}
+.stat-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:20px 22px;box-shadow:var(--sh1);transition:var(--transition);}
+.stat-card:hover{box-shadow:var(--sh2);transform:translateY(-1px);}
+.stat-icon{width:40px;height:40px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px;}
+.stat-value{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:600;line-height:1;}
+.stat-label{font-size:12px;color:var(--t2);margin-top:4px;font-weight:500;letter-spacing:.02em;}
+.stat-change{font-size:11px;margin-top:6px;}
+
+/* ═══════════════════════════════════════════════
+   GRIDS
+═══════════════════════════════════════════════ */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.meas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r);font-size:13px;font-weight:600;border:none;cursor:pointer;transition:var(--transition);text-decoration:none;white-space:nowrap;}
+.btn-primary{background:var(--charcoal);color:var(--white);}
+.btn-primary:hover{background:var(--charcoal2);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--white);}
+.btn-gold:hover{opacity:.9;transform:translateY(-1px);box-shadow:0 4px 16px rgba(184,151,90,.35);}
+.btn-ghost{background:var(--white);color:var(--t1);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--border2);background:var(--cream);}
+.btn-danger{background:var(--rose2);color:var(--rose3);border:1px solid var(--rose);}
+.btn-danger:hover{background:var(--rose);color:var(--white);}
+.btn-ai{background:linear-gradient(135deg,#7C3AED,#6D28D9);color:var(--white);}
+.btn-ai:hover{opacity:.9;}
+.btn-sm{padding:6px 14px;font-size:12px;}
+.btn-icon{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--r);border:1.5px solid var(--border);background:var(--white);font-size:15px;cursor:pointer;transition:var(--transition);}
+.btn-icon:hover{background:var(--cream2);}
+
+/* ═══════════════════════════════════════════════
+   FORMS
+═══════════════════════════════════════════════ */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.flabel{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--t2);}
+.form-section{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--t3);margin:18px 0 12px;padding-top:14px;border-top:1px solid var(--border);}
+.form-section:first-child{margin-top:0;padding-top:0;border-top:none;}
+.form-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border);}
+
+/* ═══════════════════════════════════════════════
+   BADGES & TAGS
+═══════════════════════════════════════════════ */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.02em;}
+.badge-vip{background:var(--gold3);color:var(--gold4);}
+.badge-premium{background:var(--blue2);color:var(--blue);}
+.badge-standard{background:#F3F4F6;color:#374151;}
+.badge-inquiry{background:#F3F4F6;color:var(--t2);}
+.badge-progress{background:var(--blue2);color:var(--blue);}
+.badge-fitting{background:var(--gold3);color:var(--gold4);}
+.badge-complete{background:var(--purple2);color:var(--purple);}
+.badge-delivered{background:var(--green2);color:var(--green);}
+.tag{display:inline-flex;align-items:center;padding:3px 9px;background:var(--cream2);border-radius:20px;font-size:11px;color:var(--t2);font-weight:500;}
+
+/* ═══════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(28,28,30,.6);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:flex-start;justify-content:flex-end;padding:20px;}
+.modal{background:var(--white);border-radius:var(--rxl);width:100%;max-width:600px;max-height:calc(100vh - 40px);overflow-y:auto;box-shadow:var(--sh3);animation:slideIn .25s ease;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;}
+.modal-title{font-size:24px;}
+.modal-close{width:32px;height:32px;border-radius:50%;border:none;background:var(--cream2);color:var(--t2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--cream3);}
+.modal-body{padding:20px 24px 28px;}
+
+/* ═══════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════ */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:900;display:flex;flex-direction:column;gap:8px;}
+.toast{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--charcoal);color:var(--white);border-radius:var(--rl);font-size:13px;box-shadow:var(--sh3);animation:fadeUp .3s ease;min-width:240px;max-width:360px;border-left:3px solid var(--gold);}
+.toast.success{border-color:var(--green);}
+.toast.error{border-color:var(--rose);}
+.toast.info{border-color:var(--blue);}
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════════ */
+.pbar{height:5px;background:var(--cream2);border-radius:10px;overflow:hidden;}
+.pfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:10px;transition:width .6s ease;}
+
+/* ═══════════════════════════════════════════════
+   KANBAN / CLIENT CARDS
+═══════════════════════════════════════════════ */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px;}
+.k-card{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:16px 18px;margin-bottom:8px;box-shadow:var(--sh1);border-left:3px solid;transition:var(--transition);}
+.k-card:hover{box-shadow:var(--sh2);transform:translateY(-1px);}
+.k-card.inquiry{border-left-color:var(--blue);}
+.k-card.progress{border-left-color:var(--gold);}
+.k-card.fitting{border-left-color:var(--purple);}
+.k-card.complete{border-left-color:var(--green);}
+.k-card.delivered{border-left-color:var(--t3);}
+
+/* ═══════════════════════════════════════════════
+   AVATAR
+═══════════════════════════════════════════════ */
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;flex-shrink:0;}
+
+/* ═══════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════ */
+.empty{text-align:center;padding:56px 24px;}
+.empty-icon{font-size:44px;margin-bottom:14px;}
+.empty-title{font-size:20px;color:var(--t1);margin-bottom:6px;}
+.empty-sub{font-size:13px;color:var(--t2);line-height:1.6;}
+
+/* ═══════════════════════════════════════════════
+   DIVIDER
+═══════════════════════════════════════════════ */
+.divider{height:1px;background:var(--border);margin:16px 0;}
+
+/* ═══════════════════════════════════════════════
+   AI PANEL
+═══════════════════════════════════════════════ */
+#ai-fab{position:fixed;bottom:28px;right:28px;width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;color:var(--charcoal);font-size:22px;cursor:pointer;box-shadow:0 4px 20px rgba(184,151,90,.45);z-index:400;display:flex;align-items:center;justify-content:center;transition:var(--transition);}
+#ai-fab:hover{box-shadow:0 6px 24px rgba(184,151,90,.6);transform:scale(1.05);}
+#ai-panel{position:fixed;bottom:92px;right:28px;width:360px;height:520px;background:var(--white);border-radius:var(--rxl);box-shadow:var(--sh3);border:1.5px solid var(--border);display:none;flex-direction:column;z-index:400;animation:bounceIn .3s ease;overflow:hidden;}
+#ai-panel.open{display:flex;}
+.ai-head{padding:16px 20px;background:var(--charcoal);display:flex;align-items:center;gap:10px;}
+.ai-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:700;color:var(--charcoal);flex-shrink:0;}
+.ai-head-info{flex:1;}
+.ai-head-name{font-size:14px;font-weight:600;color:var(--white);}
+.ai-head-status{font-size:11px;color:var(--gold);display:flex;align-items:center;gap:4px;}
+.ai-head-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;}
+.ai-close{background:none;border:none;color:rgba(255,255,255,.5);font-size:18px;cursor:pointer;padding:4px;}
+.ai-close:hover{color:var(--white);}
+.ai-key-wrap{padding:12px 14px;background:var(--gold3);border-bottom:1px solid var(--border);}
+.ai-key-wrap p{font-size:11px;color:var(--t2);margin-bottom:6px;font-weight:500;}
+.ai-key-row{display:flex;gap:8px;}
+.ai-key-row input{font-size:12px;padding:7px 10px;}
+.ai-key-row button{padding:7px 12px;font-size:12px;white-space:nowrap;flex-shrink:0;}
+.ai-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.ai-msg{display:flex;gap:8px;align-items:flex-end;}
+.ai-msg.user{flex-direction:row-reverse;}
+.ai-msg-bubble{max-width:78%;padding:10px 13px;border-radius:var(--rl);font-size:13px;line-height:1.5;}
+.ai-msg.aria .ai-msg-bubble{background:var(--cream2);color:var(--t1);border-bottom-left-radius:2px;}
+.ai-msg.user .ai-msg-bubble{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--white);border-bottom-right-radius:2px;}
+.ai-msg-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--charcoal);flex-shrink:0;}
+.ai-typing{display:flex;gap:4px;padding:10px 13px;background:var(--cream2);border-radius:var(--rl);width:fit-content;}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);animation:pulse 1s infinite;}
+.ai-dot:nth-child(2){animation-delay:.2s;}
+.ai-dot:nth-child(3){animation-delay:.4s;}
+.ai-input-wrap{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.ai-input{font-size:13px;padding:9px 12px;resize:none;border-radius:var(--rl);}
+.ai-send{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;color:var(--white);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;align-self:flex-end;transition:var(--transition);}
+.ai-send:hover{transform:scale(1.08);}
+.ai-suggestions{padding:0 14px 10px;display:flex;flex-direction:column;gap:6px;}
+.ai-sug-btn{font-size:11px;padding:6px 10px;background:var(--cream2);border:1px solid var(--border);border-radius:var(--r);text-align:left;cursor:pointer;color:var(--t2);transition:var(--transition);}
+.ai-sug-btn:hover{background:var(--gold3);border-color:var(--gold);color:var(--t1);}
+.ai-card{border:1.5px solid transparent;background:linear-gradient(var(--white),var(--white)) padding-box,linear-gradient(135deg,var(--gold),var(--gold2)) border-box;border-radius:var(--rl);padding:20px;margin-bottom:20px;}
+.ai-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.ai-card-title{font-size:16px;display:flex;align-items:center;gap:7px;}
+.ai-powered{font-size:10px;color:var(--gold);font-weight:500;letter-spacing:.04em;}
+.ai-result{font-size:13px;line-height:1.7;color:var(--t2);background:var(--gold3);border-radius:var(--r);padding:14px;border-left:3px solid var(--gold);}
+.ai-shimmer{background:linear-gradient(90deg,var(--cream2) 25%,var(--cream3) 50%,var(--cream2) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r);height:12px;margin-bottom:8px;}
+
+/* ═══════════════════════════════════════════════
+   CHART BARS
+═══════════════════════════════════════════════ */
+.chart-bars{display:flex;align-items:flex-end;gap:8px;height:120px;padding-top:10px;}
+.chart-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+.chart-bar{width:100%;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--gold2),var(--gold));transition:height .6s ease;min-height:4px;}
+.chart-bar-label{font-size:10px;color:var(--t3);white-space:nowrap;}
+.chart-bar-val{font-size:11px;font-weight:600;color:var(--t2);}
+
+/* ═══════════════════════════════════════════════
+   DATE TILE
+═══════════════════════════════════════════════ */
+.date-tile{width:52px;height:52px;border-radius:var(--r);background:var(--gold3);border:1px solid rgba(184,151,90,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.date-day{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--gold4);line-height:1;}
+.date-mon{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);}
+
+/* ═══════════════════════════════════════════════
+   DETAIL HEADER
+═══════════════════════════════════════════════ */
+.detail-header{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;margin-bottom:4px;}
+.detail-avatar{width:68px;height:68px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;flex-shrink:0;}
+.detail-info{flex:1;}
+.detail-name{font-size:38px;font-weight:500;line-height:1.1;}
+.detail-meta{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;}
+.detail-meta-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--t2);}
+.detail-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start;}
+
+/* ═══════════════════════════════════════════════
+   ORDER ITEM
+═══════════════════════════════════════════════ */
+.order-item{background:var(--white);border:1.5px solid var(--border);border-radius:var(--rl);padding:16px 18px;margin-bottom:10px;box-shadow:var(--sh1);transition:var(--transition);}
+.order-item:hover{box-shadow:var(--sh2);}
+.order-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.order-item-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;}
+.order-item-meta{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap;}
+.order-meta-val{font-size:12px;color:var(--t2);display:flex;align-items:center;gap:4px;}
+.overdue{color:var(--rose)!important;font-weight:600;}
+
+/* ═══════════════════════════════════════════════
+   AUTH SCREENS
+═══════════════════════════════════════════════ */
+.auth-page{min-height:100vh;display:flex;background:var(--cream);}
+.auth-left{width:40%;background:var(--charcoal);padding:60px 50px;display:flex;flex-direction:column;justify-content:center;position:relative;overflow:hidden;}
+.auth-left::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(184,151,90,.05);pointer-events:none;}
+.auth-left::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:rgba(184,151,90,.04);pointer-events:none;}
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px;}
+.auth-form-wrap{width:100%;max-width:420px;}
+.auth-tagline{font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:300;color:var(--white);line-height:1.25;margin-top:40px;font-style:italic;}
+.auth-desc{color:rgba(255,255,255,.45);font-size:13px;margin-top:16px;line-height:1.75;}
+.auth-features{margin-top:32px;display:flex;flex-direction:column;gap:10px;}
+.auth-feature{display:flex;align-items:center;gap:10px;font-size:12px;color:rgba(255,255,255,.5);}
+.auth-feature-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+.auth-title{font-size:36px;margin-bottom:6px;}
+.auth-sub{font-size:14px;color:var(--t2);margin-bottom:30px;}
+.input-icon-wrap{position:relative;}
+.input-icon-wrap input{padding-left:38px;}
+.input-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--t3);}
+
+/* Auth error box */
+.auth-error{background:var(--rose2);border:1px solid var(--rose);border-radius:var(--r);padding:10px 14px;font-size:13px;color:var(--rose3);margin-bottom:14px;display:none;}
+.auth-error.show{display:block;}
+
+/* Password strength */
+.pw-strength{height:3px;border-radius:10px;background:var(--border);margin-top:5px;overflow:hidden;}
+.pw-strength-bar{height:100%;border-radius:10px;transition:width .3s ease,background .3s ease;}
+
+/* Auth loading spinner */
+.auth-spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:var(--white);border-radius:50%;animation:spinRing .7s linear infinite;display:none;margin-right:6px;}
+
+/* ═══════════════════════════════════════════════
+   AUTH LOADING OVERLAY
+═══════════════════════════════════════════════ */
+#auth-loading{display:none;position:fixed;inset:0;z-index:9999;background:rgba(28,28,30,.92);backdrop-filter:blur(8px);flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+.auth-loading-ring{width:56px;height:56px;border-radius:50%;border:3px solid rgba(184,151,90,.25);border-top-color:var(--gold);animation:spinRing .8s linear infinite;}
+
+/* ═══════════════════════════════════════════════
+   ANALYTICS
+═══════════════════════════════════════════════ */
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.top-client-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.top-client-item:last-child{border-bottom:none;}
+.top-rank{width:24px;height:24px;border-radius:50%;background:var(--gold3);color:var(--gold4);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ═══════════════════════════════════════════════
+   LOGO
+═══════════════════════════════════════════════ */
+.logo-mark{background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:var(--r);padding:6px;display:flex;align-items:center;justify-content:center;}
+
+/* ═══════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════ */
+.download-app-card{border:2px solid transparent;background:linear-gradient(var(--white),var(--white)) padding-box,linear-gradient(135deg,var(--gold),var(--gold2)) border-box;border-radius:var(--rl);padding:22px;margin-bottom:20px;}
+.download-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0;}
+.download-step{background:var(--cream);border-radius:var(--r);padding:12px;text-align:center;border:1px solid var(--border);}
+.download-step-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--charcoal);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;}
+.download-step-text{font-size:12px;color:var(--t2);line-height:1.4;}
+
+/* ═══════════════════════════════════════════════
+   INSTALL BANNER
+═══════════════════════════════════════════════ */
+#install-banner{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(135deg,var(--charcoal),var(--charcoal2));border-top:2px solid rgba(184,151,90,.4);padding:14px 20px;display:none;align-items:center;justify-content:space-between;gap:14px;z-index:400;flex-wrap:wrap;}
+#install-banner.show{display:flex;}
+.install-banner-left{display:flex;align-items:center;gap:12px;}
+.install-banner-text{color:var(--white);}
+.install-banner-title{font-size:14px;font-weight:600;}
+.install-banner-sub{font-size:12px;color:rgba(255,255,255,.55);margin-top:1px;}
+.install-banner-actions{display:flex;gap:8px;}
+.btn-install{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--charcoal);font-weight:700;font-size:13px;padding:9px 20px;border-radius:var(--r);border:none;cursor:pointer;transition:var(--transition);}
+.btn-install:hover{transform:translateY(-1px);}
+.btn-dismiss{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);font-size:12px;padding:9px 14px;border-radius:var(--r);cursor:pointer;}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS — AUTH
+═══════════════════════════════════════════════ */
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+.auth-form-wrap{animation:fadeSlideUp .45s ease both;}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media(max-width:900px){.kanban{grid-template-columns:repeat(2,1fr);}.analytics-grid{grid-template-columns:1fr;}}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .sb-overlay.open{display:block;}
+  .main{margin-left:0;}
+  .page{padding:20px 16px;}
+  .menu-btn{display:flex;}
+  .auth-left{display:none;}
+  .auth-right{padding:24px 16px;}
+  .grid2,.grid3,.grid4{grid-template-columns:1fr;}
+  .meas-grid{grid-template-columns:repeat(2,1fr);}
+  .kanban{grid-template-columns:1fr;}
+  .topbar{gap:12px;}
+  .topbar-title{font-size:28px;}
+  #ai-panel{width:calc(100vw - 20px);right:10px;}
+  .detail-name{font-size:28px;}
+}
+@media(max-width:480px){
+  .topbar-actions .btn span{display:none;}
+  .stat-value{font-size:30px;}
+  .download-steps{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ TOAST ═══════════════════ -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════ AUTH LOADING OVERLAY ═══════════════════ -->
+<div id="auth-loading">
+  <div class="auth-loading-ring"></div>
+  <p style="font-family:'Cormorant Garamond',serif;font-size:20px;color:rgba(255,255,255,.8);letter-spacing:.06em;">Loading your studio…</p>
+</div>
+
+<!-- ═══════════════════ SCREEN: SIGN IN ═══════════════════ -->
+<div id="screen-login" class="auth-page" style="display:flex;">
+  <div class="auth-left">
+    <div class="sb-logo">
+      <div class="logo-mark">
+        <svg width="26" height="26" viewBox="0 0 64 64" fill="none">
+          <circle cx="16" cy="20" r="8" stroke="#1C1C1E" stroke-width="3.5" fill="none"/>
+          <circle cx="16" cy="44" r="8" stroke="#1C1C1E" stroke-width="3.5" fill="none"/>
+          <line x1="48" y1="8" x2="20.5" y2="35.5" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="40" y1="40" x2="48" y2="48" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="20.5" y1="28.5" x2="28" y2="36" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="sb-logo-text">Atelier</span>
+    </div>
+    <div class="auth-tagline">"Every stitch tells a story of excellence."</div>
+    <p class="auth-desc">Atelier CRM empowers fashion designers to manage clients, orders, appointments, and studio operations — all in one elegant workspace.</p>
+    <div class="auth-features">
+      <div class="auth-feature"><div class="auth-feature-dot"></div>Secure cloud storage — your data always safe</div>
+      <div class="auth-feature"><div class="auth-feature-dot"></div>Complete client & order management</div>
+      <div class="auth-feature"><div class="auth-feature-dot"></div>AI-powered studio assistant (Aria)</div>
+      <div class="auth-feature"><div class="auth-feature-dot"></div>Works offline, installable PWA</div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <h1 class="auth-title">Welcome back</h1>
+      <p class="auth-sub">Sign in to your studio</p>
+      <div id="login-error" class="auth-error"></div>
+      <div class="fg">
+        <label class="flabel">Email Address</label>
+        <div class="input-icon-wrap">
+          <span class="input-icon">📧</span>
+          <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flabel">Password</label>
+        <div class="input-icon-wrap" style="position:relative;">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="login-pass" placeholder="Enter your password" autocomplete="current-password" style="padding-left:38px;padding-right:38px;"/>
+          <button onclick="togglePw('login-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;cursor:pointer;color:var(--t3);">👁</button>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:20px;">
+        <a onclick="showScreen('forgot')" style="font-size:12px;color:var(--gold4);cursor:pointer;text-decoration:underline;">Forgot password?</a>
+      </div>
+      <button id="login-btn" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:14px;" onclick="doSupabaseLogin()">
+        <span class="auth-spinner" id="login-spinner"></span>
+        <span id="login-btn-text">Sign In</span>
+      </button>
+      <p style="text-align:center;font-size:13px;color:var(--t2);margin-top:20px;">
+        Don't have an account?
+        <a onclick="showScreen('signup')" style="color:var(--gold4);font-weight:600;cursor:pointer;text-decoration:none;"> Sign Up</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SCREEN: SIGN UP ═══════════════════ -->
+<div id="screen-signup" class="auth-page" style="display:none;">
+  <div class="auth-left">
+    <div class="sb-logo">
+      <div class="logo-mark">
+        <svg width="26" height="26" viewBox="0 0 64 64" fill="none">
+          <circle cx="16" cy="20" r="8" stroke="#1C1C1E" stroke-width="3.5" fill="none"/>
+          <circle cx="16" cy="44" r="8" stroke="#1C1C1E" stroke-width="3.5" fill="none"/>
+          <line x1="48" y1="8" x2="20.5" y2="35.5" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="40" y1="40" x2="48" y2="48" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="20.5" y1="28.5" x2="28" y2="36" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="sb-logo-text">Atelier</span>
+    </div>
+    <div class="auth-tagline">"Build your studio, one client at a time."</div>
+    <p class="auth-desc">Join fashion designers across Ghana using Atelier to grow their studio, organise their clients, and deliver world-class work.</p>
+    <div class="auth-features">
+      <div class="auth-feature"><div class="auth-feature-dot"></div>Free to get started</div>
+      <div class="auth-feature"><div class="auth-feature-dot"></div>Your data is completely private</div>
+      <div class="auth-feature"><div class="auth-feature-dot"></div>Access from any device</div>
+      <div class="auth-feature"><div class="auth-feature-dot"></div>No credit card required</div>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <h1 class="auth-title">Create your studio</h1>
+      <p class="auth-sub">Start managing your fashion business today</p>
+      <div id="signup-error" class="auth-error"></div>
+      <div class="fg">
+        <label class="flabel">Full Name</label>
+        <div class="input-icon-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" id="signup-name" placeholder="Akosua Mensah" autocomplete="name"/>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flabel">Email Address</label>
+        <div class="input-icon-wrap">
+          <span class="input-icon">📧</span>
+          <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="flabel">Password</label>
+        <div class="input-icon-wrap" style="position:relative;">
+          <span class="input-icon">🔒</span>
+          <input type="password" id="signup-pass" placeholder="Min. 6 characters" autocomplete="new-password" style="padding-left:38px;padding-right:38px;" oninput="checkPwStrength(this.value)"/>
+          <button onclick="togglePw('signup-pass',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:15px;cursor:pointer;color:var(--t3);">👁</button>
+        </div>
+        <div class="pw-strength"><div class="pw-strength-bar" id="pw-bar" style="width:0%;background:var(--rose);"></div></div>
+      </div>
+      <div class="fg">
+        <label class="flabel">Confirm Password</label>
+        <div class="input-icon-wrap">
+          <span class="input-icon">🔐</span>
+          <input type="password" id="signup-pass2" placeholder="Repeat your password" autocomplete="new-password"/>
+        </div>
+      </div>
+      <button id="signup-btn" class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;font-size:14px;margin-top:6px;" onclick="doSupabaseSignup()">
+        <span class="auth-spinner" id="signup-spinner"></span>
+        <span id="signup-btn-text">Create Account</span>
+      </button>
+      <p style="text-align:center;font-size:13px;color:var(--t2);margin-top:20px;">
+        Already have an account?
+        <a onclick="showScreen('login')" style="color:var(--gold4);font-weight:600;cursor:pointer;"> Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SCREEN: VERIFY EMAIL ═══════════════════ -->
+<div id="screen-verify" class="auth-page" style="display:none;">
+  <div class="auth-left">
+    <div class="sb-logo">
+      <div class="logo-mark">
+        <svg width="26" height="26" viewBox="0 0 64 64" fill="none">
+          <circle cx="16" cy="20" r="8" stroke="#1C1C1E" stroke-width="3.5" fill="none"/>
+          <circle cx="16" cy="44" r="8" stroke="#1C1C1E" stroke-width="3.5" fill="none"/>
+          <line x1="48" y1="8" x2="20.5" y2="35.5" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="40" y1="40" x2="48" y2="48" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="20.5" y1="28.5" x2="28" y2="36" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="sb-logo-text">Atelier</span>
+    </div>
+    <div class="auth-tagline">"Almost there — check your inbox."</div>
+    <p class="auth-desc">We sent a verification link to your email. Click the link to activate your studio account.</p>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap" style="text-align:center;">
+      <div style="font-size:56px;margin-bottom:20px;">📧</div>
+      <h1 class="auth-title">Check your email</h1>
+      <p style="font-size:14px;color:var(--t2);margin-bottom:8px;">We sent a verification link to</p>
+      <p style="font-size:15px;font-weight:600;color:var(--t1);margin-bottom:24px;" id="verify-email-display">your email</p>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:24px;line-height:1.7;">Click the link in the email to verify your account, then return here and sign in.</p>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;" onclick="showScreen('login')">Go to Sign In</button>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;padding:13px;margin-top:10px;" onclick="resendVerificationEmail()">Resend Verification Email</button>
+      <p style="font-size:12px;color:var(--t3);margin-top:20px;">Didn't receive it? Check your spam folder.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ SCREEN: FORGOT PASSWORD ═══════════════════ -->
+<div id="screen-forgot" class="auth-page" style="display:none;">
+  <div class="auth-left">
+    <div class="sb-logo">
+      <div class="logo-mark">
+        <svg width="26" height="26" viewBox="0 0 64 64" fill="none">
+          <circle cx="16" cy="20" r="8" stroke="#1C1C1E" stroke-width="3.5" fill="none"/>
+          <circle cx="16" cy="44" r="8" stroke="#1C1C1E" stroke-width="3.5" fill="none"/>
+          <line x1="48" y1="8" x2="20.5" y2="35.5" stroke="#1C1C1E" stroke-width="3.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="sb-logo-text">Atelier</span>
+    </div>
+    <div class="auth-tagline">"Reset your password, reclaim your studio."</div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <h1 class="auth-title">Reset Password</h1>
+      <p class="auth-sub">Enter your email and we'll send you a reset link</p>
+      <div id="forgot-error" class="auth-error"></div>
+      <div class="fg">
+        <label class="flabel">Email Address</label>
+        <div class="input-icon-wrap">
+          <span class="input-icon">📧</span>
+          <input type="email" id="forgot-email" placeholder="you@example.com"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:13px;" onclick="doPasswordReset()">Send Reset Link</button>
+      <p style="text-align:center;font-size:13px;color:var(--t2);margin-top:20px;">
+        <a onclick="showScreen('login')" style="color:var(--gold4);font-weight:600;cursor:pointer;">← Back to Sign In</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAIN APP ═══════════════════ -->
+<div id="app" style="display:none;">
+
+  <!-- Sidebar overlay (mobile) -->
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">
+        <div class="logo-mark">
+          <svg width="22" height="22" viewBox="0 0 64 64" fill="none">
+            <circle cx="16" cy="20" r="8" stroke="#1C1C1E" stroke-width="4" fill="none"/>
+            <circle cx="16" cy="44" r="8" stroke="#1C1C1E" stroke-width="4" fill="none"/>
+            <line x1="48" y1="8" x2="20.5" y2="35.5" stroke="#1C1C1E" stroke-width="4" stroke-linecap="round"/>
+            <line x1="40" y1="40" x2="48" y2="48" stroke="#1C1C1E" stroke-width="4" stroke-linecap="round"/>
+            <line x1="20.5" y1="28.5" x2="28" y2="36" stroke="#1C1C1E" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="sb-logo-text">Atelier</span>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-nav-section">Studio</div>
+      <button class="sb-link active" id="nav-dashboard" onclick="navigate('dashboard',this)"><span class="sb-icon">📊</span> Dashboard</button>
+      <button class="sb-link" id="nav-clients" onclick="navigate('clients',this)"><span class="sb-icon">👥</span> Clients</button>
+      <button class="sb-link" id="nav-orders" onclick="navigate('orders',this)"><span class="sb-icon">📦</span> Orders</button>
+      <button class="sb-link" id="nav-appointments" onclick="navigate('appointments',this)"><span class="sb-icon">📅</span> Appointments</button>
+      <div class="sb-nav-section">Management</div>
+      <button class="sb-link" id="nav-invoices" onclick="navigate('invoices',this)"><span class="sb-icon">🧾</span> Invoices</button>
+      <button class="sb-link" id="nav-inventory" onclick="navigate('inventory',this)"><span class="sb-icon">🧵</span> Inventory</button>
+      <button class="sb-link" id="nav-analytics" onclick="navigate('analytics',this)"><span class="sb-icon">📈</span> Analytics</button>
+      <div class="sb-nav-section">System</div>
+      <button class="sb-link" id="nav-settings" onclick="navigate('settings',this)"><span class="sb-icon">⚙️</span> Settings</button>
+    </nav>
+
+    <div class="sb-footer">
+      <div class="sb-user">
+        <div class="sb-avatar" id="sb-avatar">A</div>
+        <div class="sb-user-info">
+          <div class="sb-user-name" id="sb-user-name">Studio</div>
+          <div class="sb-user-role" id="sb-user-role">Fashion Designer</div>
+        </div>
+        <button onclick="doSupabaseLogout()" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px;" title="Logout">🚪</button>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);">
+        <button onclick="downloadAppFile()" style="display:flex;align-items:center;gap:8px;width:100%;background:rgba(184,151,90,.12);border:1px solid rgba(184,151,90,.25);border-radius:var(--r);padding:8px 12px;color:var(--gold);font-size:12px;font-weight:500;cursor:pointer;transition:var(--transition);" onmouseover="this.style.background='rgba(184,151,90,.22)'" onmouseout="this.style.background='rgba(184,151,90,.12)'">
+          ⬇️ Download App File
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="page page-section active"></div>
+
+    <!-- CLIENTS PAGE -->
+    <div id="page-clients" class="page page-section"></div>
+
+    <!-- CLIENT DETAIL PAGE -->
+    <div id="page-client-detail" class="page page-section"></div>
+
+    <!-- ORDERS PAGE -->
+    <div id="page-orders" class="page page-section"></div>
+
+    <!-- APPOINTMENTS PAGE -->
+    <div id="page-appointments" class="page page-section"></div>
+
+    <!-- INVOICES PAGE -->
+    <div id="page-invoices" class="page page-section"></div>
+
+    <!-- INVENTORY PAGE -->
+    <div id="page-inventory" class="page page-section"></div>
+
+    <!-- ANALYTICS PAGE -->
+    <div id="page-analytics" class="page page-section"></div>
+
+    <!-- SETTINGS PAGE -->
+    <div id="page-settings" class="page page-section"></div>
+
+  </div><!-- /main -->
+
+  <!-- AI FAB -->
+  <button id="ai-fab" onclick="toggleAI()" title="Aria — AI Studio Assistant">✨</button>
+
+  <!-- AI Panel -->
+  <div id="ai-panel">
+    <div class="ai-head">
+      <div class="ai-avatar">A</div>
+      <div class="ai-head-info">
+        <div class="ai-head-name">Aria</div>
+        <div class="ai-head-status">AI Studio Assistant</div>
+      </div>
+      <button class="ai-close" onclick="toggleAI()">✕</button>
+    </div>
+    <div id="ai-key-section" class="ai-key-wrap">
+      <p>Add your Anthropic API key to activate Aria</p>
+      <div class="ai-key-row">
+        <input type="password" id="ai-key-input" placeholder="sk-ant-…"/>
+        <button class="btn btn-primary btn-sm" onclick="saveApiKey()">Save</button>
+      </div>
+    </div>
+    <div class="ai-msgs" id="ai-msgs">
+      <div class="ai-msg aria fi">
+        <div class="ai-msg-avatar">A</div>
+        <div class="ai-msg-bubble">Hello! I'm Aria, your AI studio assistant. I can help you draft client messages, suggest outfit ideas, analyse your studio performance, and more. How can I assist you today?</div>
+      </div>
+    </div>
+    <div class="ai-suggestions">
+      <button class="ai-sug-btn" onclick="sendAIMsg('Give me a summary of my studio performance')">📊 Studio performance summary</button>
+      <button class="ai-sug-btn" onclick="sendAIMsg('Draft a follow-up message for a client whose order is ready')">✉️ Draft client follow-up</button>
+    </div>
+    <div class="ai-input-wrap">
+      <textarea class="ai-input" id="ai-input" rows="1" placeholder="Ask Aria anything…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAIMsg();}"></textarea>
+      <button class="ai-send" onclick="sendAIMsg()">➤</button>
+    </div>
+  </div>
+
+  <!-- Install banner -->
+  <div id="install-banner">
+    <div class="install-banner-left">
+      <div style="width:42px;height:42px;border-radius:var(--r);background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg width="22" height="22" viewBox="0 0 64 64" fill="none">
+          <circle cx="16" cy="20" r="8" stroke="#1C1C1E" stroke-width="4" fill="none"/>
+          <circle cx="16" cy="44" r="8" stroke="#1C1C1E" stroke-width="4" fill="none"/>
+          <line x1="48" y1="8" x2="20.5" y2="35.5" stroke="#1C1C1E" stroke-width="4" stroke-linecap="round"/>
+          <line x1="40" y1="40" x2="48" y2="48" stroke="#1C1C1E" stroke-width="4" stroke-linecap="round"/>
+          <line x1="20.5" y1="28.5" x2="28" y2="36" stroke="#1C1C1E" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="install-banner-text">
+        <div class="install-banner-title">Install Atelier CRM</div>
+        <div class="install-banner-sub">Add to your home screen for the best experience</div>
+      </div>
+    </div>
+    <div class="install-banner-actions">
+      <button class="btn-install" onclick="installApp()">📲 Install App</button>
+      <button class="btn-dismiss" onclick="dismissInstall()">Not now</button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- MODAL CONTAINER -->
+<div id="modal-container"></div>
+<script>
+/* ═══════════════════════════════════════════════
+   ███████╗██╗   ██╗██████╗  █████╗ ██████╗  █████╗ ███████╗███████╗
+   ██╔════╝██║   ██║██╔══██╗██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝
+   ███████╗██║   ██║██████╔╝███████║██████╔╝███████║███████╗█████╗
+   ╚════██║██║   ██║██╔═══╝ ██╔══██║██╔══██╗██╔══██║╚════██║██╔══╝
+   ███████║╚██████╔╝██║     ██║  ██║██████╔╝██║  ██║███████║███████╗
+   ╚══════╝ ╚═════╝ ╚═╝     ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝
+   SUPABASE CONFIG — Replace if you rotate your keys
+═══════════════════════════════════════════════ */
+const SUPABASE_URL  = 'https://jiyssfkfvwplhrjovjsr.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppeXNzZmtmdndwbGhyam92anNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY1NDQ2NjcsImV4cCI6MjA5MjEyMDY2N30.dxe-xx3K6ndzr4BrnihJVz6ujoOrFuSwpAGYndQMmNM'; // Get from: Supabase → Project Settings → API → anon public key (starts with eyJ...)
+
+// Initialise Supabase client
+const { createClient } = window.supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let CURRENT_USER = null;
+
+let STATE = {
+  clients:     [],
+  orders:      [],
+  appts:       [],
+  inventory:   [],
+  settings:    { studioName:'Atelier Studio', currency:'GHS', designer:'', phone:'', email:'', address:'' },
+  apiKey:      '',
+  currentPage: 'dashboard',
+  selectedClient: null,
+  aiMessages:  [],
+};
+
+/* ═══════════════════════════════════════════════
+   AUTH — SCREEN MANAGEMENT
+═══════════════════════════════════════════════ */
+function showScreen(name) {
+  ['login','signup','verify','forgot'].forEach(s => {
+    document.getElementById('screen-'+s).style.display = (s===name) ? 'flex' : 'none';
+  });
+  document.getElementById('app').style.display = 'none';
+}
+
+function setAuthLoading(form, loading) {
+  const btn     = document.getElementById(form+'-btn');
+  const text    = document.getElementById(form+'-btn-text');
+  const spinner = document.getElementById(form+'-spinner');
+  if (!btn) return;
+  btn.disabled = loading;
+  if (text)    text.style.display    = loading ? 'none'   : 'inline';
+  if (spinner) spinner.style.display = loading ? 'inline' : 'none';
+}
+
+function showAuthError(form, msg) {
+  const el = document.getElementById(form+'-error');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearAuthError(form) {
+  const el = document.getElementById(form+'-error');
+  if (el) { el.textContent = ''; el.classList.remove('show'); }
+}
+
+function sbErrMsg(msg) {
+  if (msg.includes('Invalid login credentials'))  return '⚠️ Incorrect email or password. Please try again.';
+  if (msg.includes('Email not confirmed'))         return '⚠️ Please verify your email before signing in.';
+  if (msg.includes('User already registered'))     return '⚠️ An account with this email already exists. Sign in instead.';
+  if (msg.includes('Password should be'))         return '⚠️ Password must be at least 6 characters.';
+  if (msg.includes('Unable to validate email'))   return '⚠️ Please enter a valid email address.';
+  if (msg.includes('Email rate limit exceeded'))  return '⚠️ Too many attempts. Please wait a moment.';
+  return '⚠️ ' + msg;
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH — SIGN UP
+═══════════════════════════════════════════════ */
+async function doSupabaseSignup() {
+  clearAuthError('signup');
+  const name  = document.getElementById('signup-name').value.trim();
+  const email = document.getElementById('signup-email').value.trim();
+  const pass  = document.getElementById('signup-pass').value;
+  const pass2 = document.getElementById('signup-pass2').value;
+
+  if (!name)           return showAuthError('signup','⚠️ Please enter your full name.');
+  if (!email)          return showAuthError('signup','⚠️ Please enter your email address.');
+  if (!email.includes('@')) return showAuthError('signup','⚠️ Enter a valid email address.');
+  if (pass.length < 6) return showAuthError('signup','⚠️ Password must be at least 6 characters.');
+  if (pass !== pass2)  return showAuthError('signup','⚠️ Passwords do not match.');
+
+  setAuthLoading('signup', true);
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { full_name: name } }
+    });
+    if (error) throw error;
+
+    // Show verification screen
+    document.getElementById('verify-email-display').textContent = email;
+    showScreen('verify');
+    showToast('Account created! Check your email to verify. 📧', 'success');
+  } catch(err) {
+    showAuthError('signup', sbErrMsg(err.message));
+  } finally {
+    setAuthLoading('signup', false);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH — SIGN IN
+═══════════════════════════════════════════════ */
+async function doSupabaseLogin() {
+  clearAuthError('login');
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-pass').value;
+
+  if (!email) return showAuthError('login','⚠️ Please enter your email address.');
+  if (!pass)  return showAuthError('login','⚠️ Please enter your password.');
+
+  setAuthLoading('login', true);
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+
+    CURRENT_USER = data.user;
+    await enterApp(data.user);
+  } catch(err) {
+    showAuthError('login', sbErrMsg(err.message));
+  } finally {
+    setAuthLoading('login', false);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH — LOGOUT
+═══════════════════════════════════════════════ */
+async function doSupabaseLogout() {
+  if (!confirm('Sign out of Atelier?')) return;
+  // Clear all in-memory data immediately
+  CURRENT_USER = null;
+  STATE.clients = []; STATE.orders = []; STATE.appts = [];
+  STATE.inventory = []; STATE.settings = {}; STATE.apiKey = '';
+  document.getElementById('app').style.display = 'none';
+  await sb.auth.signOut();
+  showScreen('login');
+  showToast('Signed out successfully', 'info');
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH — FORGOT PASSWORD
+═══════════════════════════════════════════════ */
+async function doPasswordReset() {
+  clearAuthError('forgot');
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) return showAuthError('forgot','⚠️ Please enter your email address.');
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.href
+    });
+    if (error) throw error;
+    showToast('Password reset email sent! Check your inbox. 📧', 'success');
+    showScreen('login');
+  } catch(err) {
+    showAuthError('forgot', sbErrMsg(err.message));
+  }
+}
+
+async function resendVerificationEmail() {
+  const email = document.getElementById('verify-email-display').textContent;
+  if (!email || email === 'your email') {
+    showToast('Please sign up again to resend.', 'error'); return;
+  }
+  try {
+    await sb.auth.resend({ type: 'signup', email });
+    showToast('Verification email resent! Check your inbox. 📧', 'success');
+  } catch(err) {
+    showToast('Could not resend. Please wait a moment.', 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH — ENTER APP
+═══════════════════════════════════════════════ */
+async function enterApp(user) {
+  CURRENT_USER = user;
+  document.getElementById('auth-loading').style.display = 'flex';
+  try {
+    await loadUserData(user.id);
+    ['login','signup','verify','forgot'].forEach(s => {
+      document.getElementById('screen-'+s).style.display = 'none';
+    });
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    renderDashboard();
+    checkBirthdays();
+    if (STATE.apiKey) document.getElementById('ai-key-section').style.display = 'none';
+    const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Designer';
+    showToast('Welcome back, ' + displayName + '! ✨', 'success');
+  } catch(e) {
+    console.error('enterApp error:', e);
+    document.getElementById('auth-loading').style.display = 'none';
+    showToast('Error loading studio. Please refresh.', 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AUTH — SESSION LISTENER (persistent sessions)
+═══════════════════════════════════════════════ */
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    // Already handled in doSupabaseLogin — only catch page refresh
+    if (!document.getElementById('app').style.display || document.getElementById('app').style.display === 'none') {
+      if (CURRENT_USER) return; // already loading
+      await enterApp(session.user);
+    }
+  }
+  if (event === 'SIGNED_OUT') {
+    showScreen('login');
+  }
+});
+
+// On page load — check if already logged in (persistent session)
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    await enterApp(session.user);
+  } else {
+    showScreen('login');
+  }
+})();
+
+/* ═══════════════════════════════════════════════
+   SUPABASE — LOAD USER DATA
+═══════════════════════════════════════════════ */
+async function loadUserData(uid) {
+  const [profileRes, clientsRes, ordersRes, apptsRes, invRes] = await Promise.all([
+    sb.from('profiles').select('*').eq('id', uid).maybeSingle(),
+    sb.from('clients').select('*').eq('user_id', uid).order('created_at', { ascending: false }),
+    sb.from('orders').select('*').eq('user_id', uid).order('created_at', { ascending: false }),
+    sb.from('appointments').select('*').eq('user_id', uid).order('date', { ascending: true }),
+    sb.from('inventory').select('*').eq('user_id', uid).order('name', { ascending: true }),
+  ]);
+
+  const profile = profileRes.data;
+  STATE.clients   = clientsRes.data  || [];
+  STATE.orders    = ordersRes.data   || [];
+  STATE.appts     = apptsRes.data    || [];
+  STATE.inventory = invRes.data      || [];
+  STATE.settings  = profile?.settings  || STATE.settings;
+  STATE.apiKey    = profile?.api_key   || '';
+
+  // Update sidebar user info
+  const displayName = profile?.full_name || CURRENT_USER?.user_metadata?.full_name || CURRENT_USER?.email?.split('@')[0] || 'Designer';
+  const userEmail   = profile?.email || CURRENT_USER?.email || 'Fashion Designer';
+  document.getElementById('sb-user-name').textContent = displayName;
+  document.getElementById('sb-user-role').textContent = userEmail;
+  document.getElementById('sb-avatar').textContent    = displayName.charAt(0).toUpperCase();
+}
+
+/* ═══════════════════════════════════════════════
+   SUPABASE — SAVE HELPERS
+═══════════════════════════════════════════════ */
+async function save() {
+  if (!CURRENT_USER) return;
+  const uid = CURRENT_USER.id;
+  // Upsert all clients, orders, appts, inventory
+  const ops = [];
+  STATE.clients.forEach(c => {
+    const { id, ...d } = c;
+    ops.push(sb.from('clients').upsert({ id, user_id: uid, ...d }));
+  });
+  STATE.orders.forEach(o => {
+    const { id, ...d } = o;
+    ops.push(sb.from('orders').upsert({ id, user_id: uid, ...d }));
+  });
+  STATE.appts.forEach(a => {
+    const { id, ...d } = a;
+    ops.push(sb.from('appointments').upsert({ id, user_id: uid, ...d }));
+  });
+  (STATE.inventory||[]).forEach(i => {
+    const { id, ...d } = i;
+    ops.push(sb.from('inventory').upsert({ id, user_id: uid, ...d }));
+  });
+  ops.push(sb.from('profiles').upsert({ id: uid, settings: STATE.settings, api_key: STATE.apiKey }, { onConflict: 'id' }));
+  await Promise.all(ops).catch(e => console.error('save error:', e));
+}
+
+async function fsProfile(data) {
+  if (!CURRENT_USER) return;
+  await sb.from('profiles').upsert({ id: CURRENT_USER.id, ...data }, { onConflict: 'id' });
+}
+
+/* ═══════════════════════════════════════════════
+   UI HELPERS
+═══════════════════════════════════════════════ */
+const today = new Date();
+const addDays = n => { const d=new Date(today); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; };
+const subDays = n => { const d=new Date(today); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0]; };
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(d) { if(!d)return'—'; return new Date(d+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}); }
+function initials(name) { const p=name.trim().split(' '); return p.length>=2?p[0][0]+p[1][0]:name.slice(0,2).toUpperCase(); }
+
+const AVATAR_COLORS = [
+  ['#F5EDD8','#8B6914'],['#EFF6FF','#1D4ED8'],['#F0FDF4','#166534'],
+  ['#FDF2F8','#9D174D'],['#FFF7ED','#9A3412'],['#F5F3FF','#5B21B6']
+];
+function avatarColor(name) { return AVATAR_COLORS[name.charCodeAt(0)%AVATAR_COLORS.length]||AVATAR_COLORS[0]; }
+
+function tierBadge(t) {
+  const map = { VIP:'badge-vip', Premium:'badge-premium', Standard:'badge-standard' };
+  return `<span class="badge ${map[t]||'badge-standard'}">${esc(t)}</span>`;
+}
+function statusBadge(s) {
+  const map = { Inquiry:'badge-inquiry','In Progress':'badge-progress',Fitting:'badge-fitting',Complete:'badge-complete',Delivered:'badge-delivered' };
+  return `<span class="badge ${map[s]||'badge-inquiry'}">${esc(s)}</span>`;
+}
+
+function showToast(msg, type='success') {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { success:'✅', error:'❌', info:'ℹ️' };
+  t.innerHTML = `<span>${icons[type]||'✅'}</span><span>${esc(msg)}</span>`;
+  container.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(8px)'; t.style.transition='all .3s ease'; setTimeout(()=>t.remove(),300); }, 3500);
+}
+
+function togglePw(id, btn) {
+  const inp = document.getElementById(id);
+  if (!inp) return;
+  inp.type = inp.type==='password' ? 'text' : 'password';
+  btn.textContent = inp.type==='password' ? '👁' : '🙈';
+}
+
+function checkPwStrength(pw) {
+  const bar = document.getElementById('pw-bar');
+  if (!bar) return;
+  let score = 0;
+  if (pw.length >= 6) score++;
+  if (pw.length >= 10) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const pcts = [0,20,40,60,80,100];
+  const colors = ['var(--rose)','var(--rose)','var(--orange)','var(--gold)','var(--green)','var(--green)'];
+  bar.style.width = pcts[score]+'%';
+  bar.style.background = colors[score];
+}
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════ */
+function navigate(page, btn) {
+  STATE.currentPage = page;
+  document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else { const nb = document.getElementById('nav-'+page); if(nb) nb.classList.add('active'); }
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-'+page.replace('-','_').replace('-detail','_detail'));
+  if(pg) pg.classList.add('active');
+  else { const pg2 = document.getElementById('page-'+page); if(pg2) pg2.classList.add('active'); }
+  const renders = {
+    dashboard: renderDashboard, clients: renderClients, orders: renderOrders,
+    appointments: renderAppointments, invoices: renderInvoices,
+    inventory: renderInventory, analytics: renderAnalytics, settings: renderSettings
+  };
+  if (renders[page]) renders[page]();
+  closeSidebar();
+}
+
+function openSidebar()  { document.getElementById('sidebar').classList.add('open'); document.getElementById('sb-overlay').classList.add('open'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sb-overlay').classList.remove('open'); }
+
+/* ═══════════════════════════════════════════════
+   CLIENT HELPERS
+═══════════════════════════════════════════════ */
+function getClient(id) { return STATE.clients.find(c=>c.id===id); }
+function getClientOrders(clientId) { return STATE.orders.filter(o=>o.client_id===clientId); }
+function getClientAppts(clientId) { return STATE.appts.filter(a=>a.client_id===clientId); }
+
+/* ═══════════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════════ */
+function showModal(html) {
+  const mc = document.getElementById('modal-container');
+  mc.innerHTML = `<div class="modal-overlay" onclick="handleOverlayClick(event)"><div class="modal">${html}</div></div>`;
+}
+function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
+function handleOverlayClick(e) { if(e.target===e.currentTarget) closeModal(); }
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+/* ═══════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════ */
+function renderDashboard() {
+  const el = document.getElementById('page-dashboard');
+  const upcoming = STATE.appts.filter(a=>a.date>=today.toISOString().split('T')[0]).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5);
+  const activeOrders = STATE.orders.filter(o=>o.status!=='Delivered').length;
+  const weekAppts = STATE.appts.filter(a=>a.date>=today.toISOString().split('T')[0]&&a.date<=addDays(7)).length;
+  const revenue = STATE.orders.filter(o=>o.status==='Delivered').reduce((s,o)=>{const m=(o.price||'').replace(/[^\d]/g,'');return s+(parseInt(m)||0);},0);
+  const studioName = STATE.settings?.studioName || 'Atelier Studio';
+  const recentClients = [...STATE.clients].sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||'')).slice(0,4);
+
+  el.innerHTML = `
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div>
+        <h1 class="topbar-title">${esc(studioName)}</h1>
+        <p class="topbar-sub">${today.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="showApptModal()">📅 <span>Schedule</span></button>
+      <button class="btn btn-ghost btn-sm" onclick="showOrderModal()">📦 <span>New Order</span></button>
+      <button class="btn btn-primary btn-sm" onclick="showClientModal()">+ <span>Add Client</span></button>
+    </div>
+  </div>
+
+  <div class="grid4 fu1" style="margin-bottom:28px;">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(28,28,30,.08);">👥</div>
+      <div class="stat-value" style="color:var(--charcoal);">${STATE.clients.length}</div>
+      <div class="stat-label">Total Clients</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--gold3);">📦</div>
+      <div class="stat-value" style="color:var(--gold4);">${activeOrders}</div>
+      <div class="stat-label">Active Orders</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--rose2);">📅</div>
+      <div class="stat-value" style="color:var(--rose3);">${weekAppts}</div>
+      <div class="stat-label">This Week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:var(--green2);">💰</div>
+      <div class="stat-value" style="color:var(--green);font-size:28px;">${STATE.settings?.currency||'GHS'} ${revenue.toLocaleString()}</div>
+      <div class="stat-label">Revenue Earned</div>
+    </div>
+  </div>
+
+  <div class="grid2 fu2" style="margin-bottom:24px;">
+    <div class="card">
+      <h3 style="font-size:20px;margin-bottom:18px;">Orders by Status</h3>
+      ${['Inquiry','In Progress','Fitting','Complete','Delivered'].map(s=>{
+        const cnt = STATE.orders.filter(o=>o.status===s).length;
+        const pct = STATE.orders.length ? (cnt/STATE.orders.length*100).toFixed(0) : 0;
+        return `<div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+            <span style="color:var(--t2);">${s}</span><span style="font-weight:600;">${cnt}</span>
+          </div>
+          <div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <h3 style="font-size:20px;">Upcoming Appointments</h3>
+        <button class="btn btn-ghost btn-sm" onclick="navigate('appointments',document.getElementById('nav-appointments'))">View all</button>
+      </div>
+      ${upcoming.length===0 ? `<div class="empty" style="padding:24px;"><div class="empty-icon">📅</div><div class="empty-title" style="font-size:16px;">No upcoming appointments</div></div>`
+      : upcoming.map(a=>{
+        const c=getClient(a.client_id);
+        if(!c) return '';
+        const [bg,fg]=avatarColor(c.name);
+        const aDate = new Date(a.date+'T00:00:00');
+        return `<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${bg};color:${fg};">${initials(c.name)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:13px;">${esc(c.name)}</div>
+            <div style="font-size:11px;color:var(--t2);">${esc(a.type)} · ${aDate.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} ${esc(a.time||'')}</div>
+          </div>
+          <span class="tag">${esc(a.type)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="card fu3">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h3 style="font-size:20px;">Recent Clients</h3>
+      <button class="btn btn-ghost btn-sm" onclick="navigate('clients',document.getElementById('nav-clients'))">View all</button>
+    </div>
+    ${recentClients.length===0 ? `<div class="empty" style="padding:16px;"><div class="empty-icon">👗</div><div class="empty-title" style="font-size:16px;">No clients yet</div><div class="empty-sub">Add your first client to get started</div><button class="btn btn-primary" style="margin-top:12px;" onclick="showClientModal()">+ Add Client</button></div>`
+    : recentClients.map(c=>{
+      const [bg,fg]=avatarColor(c.name);
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);" class="fi">
+        <div class="avatar" style="background:${bg};color:${fg};">${initials(c.name)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:14px;">${esc(c.name)}</div>
+          <div style="font-size:12px;color:var(--t2);">${esc(c.email||c.phone||'')}</div>
+        </div>
+        ${tierBadge(c.tier||'Standard')}
+        <button class="btn btn-ghost btn-sm" onclick="viewClient('${c.id}')">View</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   CLIENTS PAGE
+═══════════════════════════════════════════════ */
+function renderClients() {
+  const el = document.getElementById('page-clients');
+  el.innerHTML = `
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div><h1 class="topbar-title">Clients</h1><p class="topbar-sub">${STATE.clients.length} client${STATE.clients.length!==1?'s':''} in your studio</p></div>
+    </div>
+    <div class="topbar-actions">
+      <input type="text" id="client-search" placeholder="Search clients…" style="width:200px;" oninput="filterClients(this.value)"/>
+      <button class="btn btn-primary btn-sm" onclick="showClientModal()">+ Add Client</button>
+    </div>
+  </div>
+  <div id="clients-list" class="fu1"></div>`;
+  filterClients('');
+}
+
+function filterClients(q) {
+  const filtered = STATE.clients.filter(c =>
+    c.name.toLowerCase().includes(q.toLowerCase()) ||
+    (c.email||'').toLowerCase().includes(q.toLowerCase()) ||
+    (c.phone||'').toLowerCase().includes(q.toLowerCase())
+  );
+  const el = document.getElementById('clients-list');
+  if (!el) return;
+  if (filtered.length===0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">👗</div><div class="empty-title">${q?'No results found':'No clients yet'}</div><div class="empty-sub">${q?'Try a different search':'Add your first client to get started'}</div>${!q?`<button class="btn btn-primary" style="margin-top:16px;" onclick="showClientModal()">+ Add Client</button>`:''}</div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(c=>{
+    const [bg,fg]=avatarColor(c.name);
+    const orders = getClientOrders(c.id).length;
+    return `<div class="card fu" style="margin-bottom:12px;cursor:pointer;" onclick="viewClient('${c.id}')">
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div class="avatar" style="width:48px;height:48px;font-size:18px;background:${bg};color:${fg};flex-shrink:0;">${initials(c.name)}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px;">
+            <span style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;">${esc(c.name)}</span>
+            ${tierBadge(c.tier||'Standard')}
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            ${c.email?`<span style="font-size:12px;color:var(--t2);">📧 ${esc(c.email)}</span>`:''}
+            ${c.phone?`<span style="font-size:12px;color:var(--t2);">📞 ${esc(c.phone)}</span>`:''}
+            <span style="font-size:12px;color:var(--t2);">📦 ${orders} order${orders!==1?'s':''}</span>
+          </div>
+          ${(c.tags||[]).length?`<div style="margin-top:6px;display:flex;gap:4px;flex-wrap:wrap;">${c.tags.slice(0,3).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();showClientModal('${c.id}')">Edit</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function viewClient(id) {
+  STATE.selectedClient = id;
+  STATE.currentPage = 'client-detail';
+  document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-client-detail').classList.add('active');
+  renderClientDetail();
+}
+
+function renderClientDetail() {
+  const c = getClient(STATE.selectedClient);
+  if (!c) { navigate('clients',document.getElementById('nav-clients')); return; }
+  const el = document.getElementById('page-client-detail');
+  const [bg,fg] = avatarColor(c.name);
+  const orders = getClientOrders(c.id);
+  const appts = getClientAppts(c.id);
+
+  el.innerHTML = `
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <button class="btn btn-ghost btn-sm" onclick="navigate('clients',document.getElementById('nav-clients'))">← Clients</button>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="showClientModal('${c.id}')">✏️ Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteClient('${c.id}')">🗑 Delete</button>
+    </div>
+  </div>
+
+  <div class="card fu1" style="margin-bottom:20px;">
+    <div class="detail-header">
+      <div class="detail-avatar" style="background:${bg};color:${fg};">${initials(c.name)}</div>
+      <div class="detail-info">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <h1 class="detail-name">${esc(c.name)}</h1>
+          ${tierBadge(c.tier||'Standard')}
+        </div>
+        <div class="detail-meta">
+          ${c.email?`<div class="detail-meta-item">📧 ${esc(c.email)}</div>`:''}
+          ${c.phone?`<div class="detail-meta-item">📞 ${esc(c.phone)}</div>`:''}
+          ${c.address?`<div class="detail-meta-item">📍 ${esc(c.address)}</div>`:''}
+          ${c.budget?`<div class="detail-meta-item">💰 ${esc(c.budget)}</div>`:''}
+          ${c.birthday?`<div class="detail-meta-item">🎂 ${fmtDate(c.birthday)}</div>`:''}
+        </div>
+        ${(c.tags||[]).length?`<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">${c.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`:''}
+      </div>
+      <div class="detail-actions">
+        <button class="btn btn-primary btn-sm" onclick="showOrderModal(null,'${c.id}')">+ New Order</button>
+        <button class="btn btn-ghost btn-sm" onclick="showApptModal(null,'${c.id}')">📅 Schedule</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid2 fu2">
+    <div>
+      <!-- Measurements -->
+      <div class="card" style="margin-bottom:20px;">
+        <h3 style="font-size:20px;margin-bottom:14px;">📏 Measurements</h3>
+        ${Object.keys(c.measurements||{}).length===0 ? '<p style="font-size:13px;color:var(--t3);">No measurements recorded</p>'
+        : `<div class="meas-grid">${Object.entries(c.measurements).filter(([k])=>k!=='notes').map(([k,v])=>
+          `<div style="background:var(--cream);border-radius:var(--r);padding:10px;text-align:center;">
+            <div style="font-size:11px;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">${esc(k)}</div>
+            <div style="font-size:16px;font-weight:600;">${esc(v)}</div>
+          </div>`
+        ).join('')}</div>
+        ${c.measurements?.notes?`<div style="margin-top:10px;font-size:12px;color:var(--t2);background:var(--cream);padding:10px;border-radius:var(--r);">${esc(c.measurements.notes)}</div>`:''}`}
+      </div>
+
+      <!-- AI Insights -->
+      <div class="ai-card">
+        <div class="ai-card-head">
+          <div class="ai-card-title">✨ AI Style Insights <span class="ai-powered">Powered by Aria</span></div>
+          <button class="btn btn-ai btn-sm" onclick="generateInsights('${c.id}')">Generate</button>
+        </div>
+        <div id="ai-insights-result" style="font-size:13px;color:var(--t3);">Click Generate to get AI-powered style recommendations for ${esc(c.name)}.</div>
+      </div>
+    </div>
+
+    <div>
+      <!-- Orders -->
+      <div class="card" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="font-size:20px;">📦 Orders (${orders.length})</h3>
+          <button class="btn btn-ghost btn-sm" onclick="showOrderModal(null,'${c.id}')">+ Add</button>
+        </div>
+        ${orders.length===0 ? '<p style="font-size:13px;color:var(--t3);">No orders yet</p>'
+        : orders.map(o=>`
+          <div class="order-item">
+            <div class="order-item-head">
+              <div>
+                <div class="order-item-title">${esc(o.item)}</div>
+                <div class="order-item-meta">
+                  ${statusBadge(o.status)}
+                  ${o.price?`<span class="order-meta-val">💰 ${esc(o.price)}</span>`:''}
+                  ${o.due_date?`<span class="order-meta-val ${o.due_date<today.toISOString().split('T')[0]&&o.status!=='Delivered'?'overdue':''}">📅 ${fmtDate(o.due_date)}</span>`:''}
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-icon" onclick="showOrderModal('${o.id}')">✏️</button>
+                <button class="btn-icon" style="color:var(--rose);border-color:var(--rose);" onclick="deleteOrder('${o.id}','${c.id}')">🗑</button>
+              </div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <!-- Appointments -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3 style="font-size:20px;">📅 Appointments (${appts.length})</h3>
+          <button class="btn btn-ghost btn-sm" onclick="showApptModal(null,'${c.id}')">+ Add</button>
+        </div>
+        ${appts.length===0 ? '<p style="font-size:13px;color:var(--t3);">No appointments yet</p>'
+        : appts.map(a=>{
+          const aDate=new Date(a.date+'T00:00:00');
+          return `<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+            <div class="date-tile">
+              <div class="date-day">${aDate.getDate()}</div>
+              <div class="date-mon">${aDate.toLocaleString('en',{month:'short'}).toUpperCase()}</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:600;font-size:13px;">${esc(a.type)}</div>
+              <div style="font-size:11px;color:var(--t2);">${a.time||''} ${a.notes?'· '+a.notes:''}</div>
+            </div>
+            <button class="btn-icon" style="color:var(--rose);border-color:var(--rose);" onclick="deleteApptGlobal('${a.id}')">🗑</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   CLIENT MODAL
+═══════════════════════════════════════════════ */
+function showClientModal(editId=null) {
+  const c = editId ? getClient(editId) : null;
+  const v = f => c ? esc(c[f]||'') : '';
+  const vm = (g,f) => c ? esc((c[g]||{})[f]||'') : '';
+  showModal(`
+  <div class="modal-head">
+    <h2 class="modal-title">${c?'Edit Client':'New Client'}</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-section">Basic Information</div>
+    <div class="grid2">
+      <div class="fg"><label class="flabel">Full Name *</label><input id="cf-name" value="${v('name')}" placeholder="Adwoa Mensah"/></div>
+      <div class="fg"><label class="flabel">Client Tier</label>
+        <select id="cf-tier">
+          ${['Standard','Premium','VIP'].map(t=>`<option${(c?.tier===t||(!c&&t==='Standard'))?' selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label class="flabel">Email</label><input id="cf-email" type="email" value="${v('email')}" placeholder="client@email.com"/></div>
+      <div class="fg"><label class="flabel">Phone</label><input id="cf-phone" value="${v('phone')}" placeholder="+233 24 000 0000"/></div>
+    </div>
+    <div class="fg"><label class="flabel">Address</label><input id="cf-address" value="${v('address')}" placeholder="East Legon, Accra"/></div>
+    <div class="grid2">
+      <div class="fg"><label class="flabel">Budget Range</label><input id="cf-budget" value="${v('budget')}" placeholder="GHS 3,000–6,000"/></div>
+      <div class="fg"><label class="flabel">Birthday</label><input id="cf-birthday" type="date" value="${v('birthday')}"/></div>
+    </div>
+    <div class="form-section">Measurements</div>
+    <div class="grid3">
+      <div class="fg"><label class="flabel">Bust</label><input id="cf-bust" value="${vm('measurements','bust')}" placeholder="36"/></div>
+      <div class="fg"><label class="flabel">Waist</label><input id="cf-waist" value="${vm('measurements','waist')}" placeholder="28"/></div>
+      <div class="fg"><label class="flabel">Hips</label><input id="cf-hips" value="${vm('measurements','hips')}" placeholder="38"/></div>
+      <div class="fg"><label class="flabel">Height</label><input id="cf-height" value="${vm('measurements','height')}" placeholder="5'6&quot;"/></div>
+      <div class="fg"><label class="flabel">Shoulder</label><input id="cf-shoulder" value="${vm('measurements','shoulder')}" placeholder="15"/></div>
+      <div class="fg"><label class="flabel">Inseam</label><input id="cf-inseam" value="${vm('measurements','inseam')}" placeholder="30"/></div>
+    </div>
+    <div class="fg"><label class="flabel">Fit Notes</label><textarea id="cf-fitnotes" rows="2">${vm('measurements','notes')}</textarea></div>
+    <div class="form-section">Style Preferences</div>
+    <div class="grid2">
+      <div class="fg"><label class="flabel">Favourite Colors</label><input id="cf-colors" value="${c?.style_prefs?.colors||''}" placeholder="Ivory, Champagne, Black"/></div>
+      <div class="fg"><label class="flabel">Preferred Fabrics</label><input id="cf-fabrics" value="${c?.style_prefs?.fabrics||''}" placeholder="Silk, Organza"/></div>
+      <div class="fg"><label class="flabel">Silhouettes</label><input id="cf-sils" value="${c?.style_prefs?.silhouettes||''}" placeholder="A-line, Column"/></div>
+      <div class="fg"><label class="flabel">Occasions</label><input id="cf-occasions" value="${c?.style_prefs?.occasions||''}" placeholder="Bridal, Evening"/></div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient('${editId||''}')">
+        ${c?'Save Changes':'Add Client'}
+      </button>
+    </div>
+  </div>`);
+}
+
+async function saveClient(editId) {
+  const name = document.getElementById('cf-name').value.trim();
+  if (!name) { showToast('Client name is required','error'); return; }
+  const measurements = {
+    bust: document.getElementById('cf-bust').value.trim(),
+    waist: document.getElementById('cf-waist').value.trim(),
+    hips: document.getElementById('cf-hips').value.trim(),
+    height: document.getElementById('cf-height').value.trim(),
+    shoulder: document.getElementById('cf-shoulder').value.trim(),
+    inseam: document.getElementById('cf-inseam').value.trim(),
+    notes: document.getElementById('cf-fitnotes').value.trim(),
+  };
+  const style_prefs = {
+    colors: document.getElementById('cf-colors').value.trim(),
+    fabrics: document.getElementById('cf-fabrics').value.trim(),
+    silhouettes: document.getElementById('cf-sils').value.trim(),
+    occasions: document.getElementById('cf-occasions').value.trim(),
+  };
+  const data = {
+    user_id: CURRENT_USER.id,
+    name,
+    tier: document.getElementById('cf-tier').value,
+    email: document.getElementById('cf-email').value.trim()||null,
+    phone: document.getElementById('cf-phone').value.trim()||null,
+    address: document.getElementById('cf-address').value.trim()||null,
+    budget: document.getElementById('cf-budget').value.trim()||null,
+    birthday: document.getElementById('cf-birthday').value||null,
+    measurements, style_prefs,
+  };
+
+  try {
+    if (editId) {
+      const { error } = await sb.from('clients').update(data).eq('id', editId).eq('user_id', CURRENT_USER.id);
+      if (error) throw error;
+      STATE.clients = STATE.clients.map(c => c.id===editId ? { ...c, ...data, id:editId } : c);
+      showToast('Client updated ✅', 'success');
+    } else {
+      const { data: created, error } = await sb.from('clients').insert({ ...data, id: uid() }).select().single();
+      if (error) throw error;
+      STATE.clients.unshift(created);
+      showToast('Client added! 🎉', 'success');
+    }
+    closeModal();
+    if (STATE.currentPage==='clients') renderClients();
+    else if (STATE.currentPage==='client-detail') renderClientDetail();
+    else renderDashboard();
+  } catch(e) {
+    showToast('Error saving client: '+e.message, 'error');
+  }
+}
+
+async function deleteClient(id) {
+  if (!confirm('Delete this client and all their data? This cannot be undone.')) return;
+  try {
+    await sb.from('clients').delete().eq('id', id).eq('user_id', CURRENT_USER.id);
+    STATE.clients = STATE.clients.filter(c=>c.id!==id);
+    STATE.orders = STATE.orders.filter(o=>o.client_id!==id);
+    STATE.appts = STATE.appts.filter(a=>a.client_id!==id);
+    showToast('Client deleted', 'info');
+    navigate('clients', document.getElementById('nav-clients'));
+  } catch(e) {
+    showToast('Error deleting client: '+e.message, 'error');
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   ORDERS PAGE
+═══════════════════════════════════════════════ */
+function renderOrders() {
+  const el = document.getElementById('page-orders');
+  el.innerHTML = `
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div><h1 class="topbar-title">Orders</h1><p class="topbar-sub">${STATE.orders.length} total orders</p></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="showOrderModal()">+ New Order</button>
+    </div>
+  </div>
+  <div class="kanban fu1">
+    ${['Inquiry','In Progress','Fitting','Complete','Delivered'].map(status=>{
+      const statusOrders = STATE.orders.filter(o=>o.status===status);
+      const slugMap = {'In Progress':'progress','Inquiry':'inquiry','Fitting':'fitting','Complete':'complete','Delivered':'delivered'};
+      return `<div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;gap:8px;">${statusBadge(status)}<span style="font-size:12px;color:var(--t3);">${statusOrders.length}</span></div>
+          <button class="btn-icon" style="width:26px;height:26px;font-size:13px;" onclick="showOrderModal(null,null,'${status}')">+</button>
+        </div>
+        ${statusOrders.length===0 ? `<div style="text-align:center;padding:24px 8px;color:var(--t3);font-size:12px;border:2px dashed var(--border);border-radius:var(--rl);">No ${status.toLowerCase()} orders</div>`
+        : statusOrders.map(o=>{
+          const c = getClient(o.client_id);
+          return `<div class="k-card ${slugMap[status]||'inquiry'}">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:500;margin-bottom:6px;">${esc(o.item)}</div>
+            ${c?`<div style="font-size:12px;color:var(--t2);margin-bottom:6px;">👤 ${esc(c.name)}</div>`:''}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+              <span style="font-size:13px;font-weight:600;color:var(--gold4);">${esc(o.price||'')}</span>
+              ${o.due_date?`<span style="font-size:11px;color:var(--t3);">📅 ${fmtDate(o.due_date)}</span>`:''}
+            </div>
+            <div style="display:flex;gap:4px;margin-top:10px;">
+              <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="showOrderModal('${o.id}')">✏️</button>
+              <button class="btn-icon" style="color:var(--rose);border-color:var(--rose);" onclick="deleteOrderGlobal('${o.id}')">🗑</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function showOrderModal(editId=null, preClientId=null, preStatus=null) {
+  const o = editId ? STATE.orders.find(x=>x.id===editId) : null;
+  const clientOptions = STATE.clients.map(c=>`<option value="${c.id}"${(o&&o.client_id===c.id)||(preClientId&&preClientId===c.id)?' selected':''}>${esc(c.name)}</option>`).join('');
+  showModal(`
+  <div class="modal-head">
+    <h2 class="modal-title">${o?'Edit Order':'New Order'}</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="fg"><label class="flabel">Client</label>
+      <select id="of-client"${preClientId?' disabled':''}>
+        <option value="">No client</option>${clientOptions}
+      </select>
+    </div>
+    <div class="fg"><label class="flabel">Item / Garment *</label><input id="of-item" value="${esc(o?.item||'')}" placeholder="Ivory Silk Bridal Gown"/></div>
+    <div class="fg"><label class="flabel">Description</label><textarea id="of-desc" rows="2">${esc(o?.description||'')}</textarea></div>
+    <div class="grid3">
+      <div class="fg"><label class="flabel">Status</label>
+        <select id="of-status">
+          ${['Inquiry','In Progress','Fitting','Complete','Delivered'].map(s=>`<option${(o?.status===s)||(preStatus===s)?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="fg"><label class="flabel">Price</label><input id="of-price" value="${esc(o?.price||'')}" placeholder="GHS 8,500"/></div>
+      <div class="fg"><label class="flabel">Deposit</label><input id="of-deposit" value="${esc(o?.deposit||'')}" placeholder="GHS 4,000"/></div>
+    </div>
+    <div class="grid2">
+      <div class="fg"><label class="flabel">Due Date</label><input type="date" id="of-due" value="${o?.due_date||addDays(30)}"/></div>
+      <div class="fg"><label class="flabel">Cost (Internal)</label><input id="of-cost" value="${esc(o?.cost||'')}" placeholder="GHS 2,000"/></div>
+    </div>
+    <div class="fg"><label class="flabel">Notes</label><textarea id="of-notes" rows="2">${esc(o?.notes||'')}</textarea></div>
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveOrder('${editId||''}','${preClientId||''}')">
+        ${o?'Save Changes':'Create Order'}
+      </button>
+    </div>
+  </div>`);
+  if(preClientId) document.getElementById('of-client').value=preClientId;
+}
+
+async function saveOrder(editId, preClientId) {
+  const item = document.getElementById('of-item').value.trim();
+  if (!item) { showToast('Item name is required','error'); return; }
+  const clientId = document.getElementById('of-client').value || preClientId || null;
+  const data = {
+    user_id: CURRENT_USER.id,
+    client_id: clientId||null,
+    item,
+    description: document.getElementById('of-desc').value.trim()||null,
+    status: document.getElementById('of-status').value,
+    price: document.getElementById('of-price').value.trim()||null,
+    deposit: document.getElementById('of-deposit').value.trim()||null,
+    due_date: document.getElementById('of-due').value||null,
+    cost: document.getElementById('of-cost').value.trim()||null,
+    notes: document.getElementById('of-notes').value.trim()||null,
+  };
+  try {
+    if (editId) {
+      const { error } = await sb.from('orders').update(data).eq('id', editId).eq('user_id', CURRENT_USER.id);
+      if (error) throw error;
+      STATE.orders = STATE.orders.map(o=>o.id===editId?{...o,...data,id:editId}:o);
+      showToast('Order updated','success');
+    } else {
+      const { data: created, error } = await sb.from('orders').insert({...data,id:uid()}).select().single();
+      if (error) throw error;
+      STATE.orders.unshift(created);
+      showToast('Order created! 📦','success');
+    }
+    closeModal();
+    if (STATE.currentPage==='orders') renderOrders();
+    else if (STATE.currentPage==='client-detail') renderClientDetail();
+    else renderDashboard();
+  } catch(e) {
+    showToast('Error saving order: '+e.message,'error');
+  }
+}
+
+async function deleteOrder(id, clientId) {
+  if (!confirm('Delete this order?')) return;
+  try {
+    await sb.from('orders').delete().eq('id',id).eq('user_id',CURRENT_USER.id);
+    STATE.orders = STATE.orders.filter(o=>o.id!==id);
+    showToast('Order deleted','info');
+    renderClientDetail();
+  } catch(e) { showToast('Error deleting order','error'); }
+}
+async function deleteOrderGlobal(id) {
+  if (!confirm('Delete this order?')) return;
+  try {
+    await sb.from('orders').delete().eq('id',id).eq('user_id',CURRENT_USER.id);
+    STATE.orders = STATE.orders.filter(o=>o.id!==id);
+    showToast('Order deleted','info');
+    renderOrders();
+  } catch(e) { showToast('Error deleting order','error'); }
+}
+
+/* ═══════════════════════════════════════════════
+   APPOINTMENTS
+═══════════════════════════════════════════════ */
+function renderAppointments() {
+  const el = document.getElementById('page-appointments');
+  const upcomingAppts = STATE.appts.filter(a=>a.date>=today.toISOString().split('T')[0]).sort((a,b)=>a.date.localeCompare(b.date));
+  const pastAppts = STATE.appts.filter(a=>a.date<today.toISOString().split('T')[0]).sort((a,b)=>b.date.localeCompare(a.date));
+
+  el.innerHTML = `
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div><h1 class="topbar-title">Appointments</h1><p class="topbar-sub">${upcomingAppts.length} upcoming</p></div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-primary btn-sm" onclick="showApptModal()">+ Schedule</button>
+    </div>
+  </div>
+
+  ${upcomingAppts.length===0&&pastAppts.length===0 ? `<div class="empty fu1"><div class="empty-icon">📅</div><div class="empty-title">No appointments yet</div><div class="empty-sub">Schedule your first appointment</div><button class="btn btn-primary" style="margin-top:16px;" onclick="showApptModal()">+ Schedule</button></div>` : ''}
+
+  ${upcomingAppts.length>0?`<div class="fu1"><h3 style="font-size:18px;margin-bottom:14px;color:var(--t2);">Upcoming</h3>
+  ${upcomingAppts.map(a=>{
+    const c=getClient(a.client_id);
+    const aDate=new Date(a.date+'T00:00:00');
+    const [bg,fg]=c?avatarColor(c.name):['#F3F4F6','#374151'];
+    return `<div class="card" style="margin-bottom:10px;display:flex;align-items:center;gap:14px;">
+      <div class="date-tile">
+        <div class="date-day">${aDate.getDate()}</div>
+        <div class="date-mon">${aDate.toLocaleString('en',{month:'short'}).toUpperCase()}</div>
+      </div>
+      <div class="avatar" style="background:${bg};color:${fg};flex-shrink:0;">${c?initials(c.name):'?'}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:14px;">${c?esc(c.name):'Unknown client'}</div>
+        <div style="font-size:12px;color:var(--t2);">${esc(a.type)}${a.time?' · '+esc(a.time):''}${a.notes?' · '+esc(a.notes):''}</div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-icon" onclick="showApptModal('${a.id}')">✏️</button>
+        <button class="btn-icon" style="color:var(--rose);border-color:var(--rose);" onclick="deleteApptGlobal('${a.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`:''}
+
+  ${pastAppts.length>0?`<div class="fu2" style="margin-top:24px;"><h3 style="font-size:18px;margin-bottom:14px;color:var(--t2);">Past</h3>
+  ${pastAppts.slice(0,10).map(a=>{
+    const c=getClient(a.client_id);
+    const aDate=new Date(a.date+'T00:00:00');
+    return `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:var(--cream2);border-radius:var(--rl);margin-bottom:8px;opacity:.7;">
+      <div class="date-tile" style="opacity:.6;">
+        <div class="date-day">${aDate.getDate()}</div>
+        <div class="date-mon">${aDate.toLocaleString('en',{month:'short'}).toUpperCase()}</div>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:600;font-size:13px;">${c?esc(c.name):'Unknown'}</div>
+        <div style="font-size:11px;color:var(--t3);">${esc(a.type)}${a.time?' · '+esc(a.time):''}</div>
+      </div>
+      <button class="btn-icon" style="color:var(--rose);border-color:var(--rose);" onclick="deleteApptGlobal('${a.id}')">🗑</button>
+    </div>`;
+  }).join('')}</div>`:''}`;
+}
+
+function showApptModal(editId=null, preClientId=null) {
+  const a = editId ? STATE.appts.find(x=>x.id===editId) : null;
+  const clientOptions = STATE.clients.map(c=>`<option value="${c.id}"${(a&&a.client_id===c.id)||(preClientId&&preClientId===c.id)?' selected':''}>${esc(c.name)}</option>`).join('');
+  showModal(`
+  <div class="modal-head">
+    <h2 class="modal-title">${a?'Edit Appointment':'Schedule Appointment'}</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="fg"><label class="flabel">Client</label>
+      <select id="af-client"${preClientId?' disabled':''}>
+        <option value="">No client</option>${clientOptions}
+      </select>
+    </div>
+    <div class="grid3">
+      <div class="fg"><label class="flabel">Type</label>
+        <select id="af-type">${['Consultation','Fitting','Delivery','Call','Other'].map(t=>`<option${a&&a.type===t?' selected':''}>${t}</option>`).join('')}</select>
+      </div>
+      <div class="fg"><label class="flabel">Date *</label><input type="date" id="af-date" value="${a?.date||today.toISOString().split('T')[0]}"/></div>
+      <div class="fg"><label class="flabel">Time</label><input type="time" id="af-time" value="${a?.time||'10:00'}"/></div>
+    </div>
+    <div class="fg"><label class="flabel">Notes</label><textarea id="af-notes" rows="2">${esc(a?.notes||'')}</textarea></div>
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAppt('${editId||''}','${preClientId||''}')">
+        ${a?'Save Changes':'Schedule'}
+      </button>
+    </div>
+  </div>`);
+  if(preClientId) document.getElementById('af-client').value=preClientId;
+}
+
+async function saveAppt(editId, preClientId) {
+  const date = document.getElementById('af-date').value;
+  if (!date) { showToast('Date is required','error'); return; }
+  const clientId = document.getElementById('af-client').value || preClientId || null;
+  const data = {
+    user_id: CURRENT_USER.id,
+    client_id: clientId||null,
+    type: document.getElementById('af-type').value,
+    date,
+    time: document.getElementById('af-time').value||null,
+    notes: document.getElementById('af-notes').value.trim()||null,
+  };
+  try {
+    if (editId) {
+      const { error } = await sb.from('appointments').update(data).eq('id',editId).eq('user_id',CURRENT_USER.id);
+      if (error) throw error;
+      STATE.appts = STATE.appts.map(a=>a.id===editId?{...a,...data,id:editId}:a);
+      showToast('Appointment updated','success');
+    } else {
+      const { data: created, error } = await sb.from('appointments').insert({...data,id:uid()}).select().single();
+      if (error) throw error;
+      STATE.appts.push(created);
+      showToast('Appointment scheduled! 📅','success');
+    }
+    closeModal();
+    if (STATE.currentPage==='appointments') renderAppointments();
+    else if (STATE.currentPage==='client-detail') renderClientDetail();
+    else renderDashboard();
+  } catch(e) {
+    showToast('Error saving appointment: '+e.message,'error');
+  }
+}
+
+async function deleteApptGlobal(id) {
+  if (!confirm('Delete this appointment?')) return;
+  try {
+    await sb.from('appointments').delete().eq('id',id).eq('user_id',CURRENT_USER.id);
+    STATE.appts = STATE.appts.filter(a=>a.id!==id);
+    showToast('Appointment deleted','info');
+    if (STATE.currentPage==='appointments') renderAppointments();
+    else if (STATE.currentPage==='client-detail') renderClientDetail();
+    else renderDashboard();
+  } catch(e) { showToast('Error deleting appointment','error'); }
+}
+
+/* ═══════════════════════════════════════════════
+   INVOICES PAGE
+═══════════════════════════════════════════════ */
+function renderInvoices() {
+  const el = document.getElementById('page-invoices');
+  const allOrders = [...STATE.orders].sort((a,b)=>(b.due_date||'').localeCompare(a.due_date||''));
+  const currency = STATE.settings?.currency||'GHS';
+  const total = STATE.orders.reduce((s,o)=>{const m=(o.price||'').replace(/[^\d]/g,'');return s+(parseInt(m)||0);},0);
+  const paid = STATE.orders.reduce((s,o)=>{const m=(o.deposit||'').replace(/[^\d]/g,'');return s+(parseInt(m)||0);},0);
+  const outstanding = total - paid;
+  const overdue = STATE.orders.filter(o=>o.due_date&&o.due_date<today.toISOString().split('T')[0]&&o.status!=='Delivered').length;
+
+  el.innerHTML = `
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div><h1 class="topbar-title">Invoices</h1><p class="topbar-sub">Generate and track payments</p></div>
+    </div>
+    <div class="topbar-actions"><button class="btn btn-ghost btn-sm" onclick="showOrderModal()">+ New Order</button></div>
+  </div>
+  <div class="grid4 fu1" style="margin-bottom:28px;">
+    ${[
+      {label:'Total Invoiced',val:currency+' '+total.toLocaleString(),icon:'🧾',col:'var(--blue)'},
+      {label:'Amount Received',val:currency+' '+paid.toLocaleString(),icon:'✅',col:'var(--green)'},
+      {label:'Outstanding',val:currency+' '+outstanding.toLocaleString(),icon:'⏳',col:'var(--orange)'},
+      {label:'Overdue Orders',val:overdue,icon:'⚠️',col:'var(--rose)'},
+    ].map(s=>`<div class="stat-card">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-value" style="font-size:26px;color:${s.col};">${s.val}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`).join('')}
+  </div>
+  <div class="fu2">
+    ${allOrders.length===0 ? '<div class="empty"><div class="empty-icon">🧾</div><div class="empty-title">No orders yet</div></div>'
+    : allOrders.map(o=>{
+      const c=getClient(o.client_id);
+      const totalAmt=parseInt((o.price||'').replace(/[^\d]/g,''))||0;
+      const depositAmt=parseInt((o.deposit||'').replace(/[^\d]/g,''))||0;
+      const balance=totalAmt-depositAmt;
+      const isOverdue=o.due_date&&o.due_date<today.toISOString().split('T')[0]&&o.status!=='Delivered';
+      return `<div class="card" style="margin-bottom:10px;">
+        <div style="display:flex;align-items:flex-start;gap:14px;">
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+              <span style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;">${esc(o.item)}</span>
+              ${statusBadge(o.status)}
+              ${isOverdue?'<span class="badge badge-inquiry" style="background:var(--rose2);color:var(--rose3);">Overdue</span>':''}
+            </div>
+            ${c?`<div style="font-size:12px;color:var(--t2);">👤 ${esc(c.name)}</div>`:''}
+            <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;">
+              ${o.price?`<span style="font-size:14px;font-weight:700;color:var(--t1);">${esc(o.price)}</span>`:''}
+              ${depositAmt>0?`<span style="font-size:13px;color:var(--green);">✅ Paid: ${currency} ${depositAmt.toLocaleString()}</span>`:''}
+              ${balance>0?`<span style="font-size:13px;color:var(--rose);">⏳ Balance: ${currency} ${balance.toLocaleString()}</span>`:''}
+              ${o.due_date?`<span style="font-size:12px;color:${isOverdue?'var(--rose)':'var(--t3)'};">📅 ${fmtDate(o.due_date)}</span>`:''}
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="btn btn-ghost btn-sm" onclick="generateInvoice('${o.id}')">🧾 Invoice</button>
+            <button class="btn btn-ghost btn-sm" onclick="whatsappShare('${o.id}')">💬 WA</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function generateInvoice(orderId) {
+  const o = STATE.orders.find(x=>x.id===orderId);
+  if (!o) return;
+  const c = getClient(o.client_id);
+  const studio = STATE.settings?.studioName||'Atelier Studio';
+  const currency = STATE.settings?.currency||'GHS';
+  const total = parseInt((o.price||'').replace(/[^\d]/g,''))||0;
+  const deposit = parseInt((o.deposit||'').replace(/[^\d]/g,''))||0;
+  const balance = total-deposit;
+  const invNum = 'INV-'+o.id.toUpperCase().slice(0,8)+'-'+new Date().getFullYear();
+  const todayStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const invoiceHTML = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'Georgia',serif;color:#1C1C1E;background:#fff;padding:40px;}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:40px;padding-bottom:24px;border-bottom:2px solid #B8975A;}.studio-name{font-size:28px;font-weight:700;}.inv-title{font-size:32px;font-weight:700;color:#B8975A;text-align:right;}.gold-line{height:3px;background:linear-gradient(90deg,#B8975A,#D4AF71);margin:20px 0;}table{width:100%;border-collapse:collapse;margin-top:20px;}th{background:#1C1C1E;color:#fff;padding:12px 16px;text-align:left;font-size:12px;text-transform:uppercase;}td{padding:14px 16px;border-bottom:1px solid #E8E2D9;font-size:13px;}.balance-row td{font-weight:700;font-size:16px;color:#B8975A;background:#F5EDD8;}.footer{margin-top:40px;padding-top:20px;border-top:1px solid #E8E2D9;text-align:center;color:#9A9A9D;font-size:11px;}@media print{button{display:none!important;}}</style></head><body>
+  <div class="header"><div><div class="studio-name">${studio}</div><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#9A9A9D;margin-top:3px;">Fashion Studio CRM</div>${STATE.settings?.phone?`<div style="font-size:12px;color:#6B6B6E;margin-top:8px;">📞 ${STATE.settings.phone}</div>`:''}</div>
+  <div><div class="inv-title">INVOICE</div><div style="font-size:13px;color:#9A9A9D;text-align:right;">${invNum}</div><div style="font-size:13px;color:#9A9A9D;text-align:right;">Date: ${todayStr}</div></div></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:20px;">
+  <div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9A9A9D;margin-bottom:4px;">Bill To</div><div style="font-weight:600;font-size:16px;">${c?.name||'—'}</div>${c?.email?`<div style="font-size:13px;">${c.email}</div>`:''}</div>
+  <div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#9A9A9D;margin-bottom:4px;">Status</div><div style="font-weight:600;">${o.status}</div>${o.due_date?`<div style="font-size:12px;margin-top:4px;">Due: ${fmtDate(o.due_date)}</div>`:''}</div></div>
+  <div class="gold-line"></div>
+  <table><thead><tr><th>Item</th><th>Description</th><th style="text-align:right;">Amount</th></tr></thead>
+  <tbody><tr><td style="font-weight:600;">${o.item}</td><td style="color:#6B6B6E;">${o.description||'Custom fashion piece'}</td><td style="text-align:right;font-weight:600;">${o.price||'—'}</td></tr>
+  ${deposit>0?`<tr><td colspan="2" style="color:#15803D;font-weight:600;">Deposit Paid</td><td style="text-align:right;color:#15803D;font-weight:600;">- ${currency} ${deposit.toLocaleString()}</td></tr>`:''}</tbody>
+  <tfoot><tr style="font-weight:700;background:#F9F6F1;"><td colspan="2">TOTAL</td><td style="text-align:right;">${o.price||'—'}</td></tr>
+  ${deposit>0?`<tr class="balance-row"><td colspan="2">BALANCE DUE</td><td style="text-align:right;">${balance>0?currency+' '+balance.toLocaleString():'PAID IN FULL ✅'}</td></tr>`:''}</tfoot></table>
+  <div class="footer"><p>Thank you for choosing ${studio}.</p><p style="margin-top:4px;">Payment: Cash · Mobile Money · Bank Transfer</p></div>
+  <div style="margin-top:24px;text-align:center;"><button onclick="window.print()" style="background:#1C1C1E;color:#fff;border:none;padding:12px 24px;border-radius:4px;font-size:14px;cursor:pointer;margin-right:8px;">🖨️ Print</button><button onclick="window.close()" style="background:transparent;color:#6B6B6E;border:1px solid #E8E2D9;padding:12px 24px;border-radius:4px;font-size:14px;cursor:pointer;">✕ Close</button></div>
+  </body></html>`;
+  const w = window.open('','_blank','width=820,height=900');
+  if(w) { w.document.write(invoiceHTML); w.document.close(); showToast('Invoice generated! 🧾','success'); }
+  else showToast('Allow pop-ups to view invoice','info');
+}
+
+function whatsappShare(orderId) {
+  const o = STATE.orders.find(x=>x.id===orderId);
+  if (!o) return;
+  const c = getClient(o.client_id);
+  const studio = STATE.settings?.studioName||'Atelier Studio';
+  const total=parseInt((o.price||'').replace(/[^\d]/g,''))||0;
+  const deposit=parseInt((o.deposit||'').replace(/[^\d]/g,''))||0;
+  const balance=total-deposit;
+  const msg=`✂️ *${studio}*\n\nDear ${c?.name||'Client'},\n\n📦 *Item:* ${o.item}\n📋 *Status:* ${o.status}\n${o.due_date?'📅 *Due:* '+fmtDate(o.due_date)+'\n':''}💰 *Total:* ${o.price||'—'}\n${deposit>0?'✅ *Paid:* GHS '+deposit.toLocaleString()+'\n':''}${balance>0?'⏳ *Balance:* GHS '+balance.toLocaleString()+'\n':''}\nThank you! 🙏`;
+  const phone=(c?.phone||'').replace(/[^0-9]/g,'');
+  window.open(`https://wa.me/${phone?phone:''}?text=${encodeURIComponent(msg)}`,'_blank');
+}
+
+/* ═══════════════════════════════════════════════
+   INVENTORY
+═══════════════════════════════════════════════ */
+function renderInventory() {
+  const el = document.getElementById('page-inventory');
+  const inv = STATE.inventory||[];
+  const lowStock = inv.filter(i=>i.qty<=i.min_qty);
+  el.innerHTML = `
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div><h1 class="topbar-title">Inventory</h1><p class="topbar-sub">Fabrics, materials & supplies</p></div>
+    </div>
+    <div class="topbar-actions"><button class="btn btn-primary btn-sm" onclick="showInventoryModal()">+ Add Material</button></div>
+  </div>
+  ${lowStock.length>0?`<div style="background:var(--rose2);border:1px solid var(--rose);border-radius:var(--r);padding:12px 16px;margin-bottom:20px;" class="fu1">⚠️ <strong>${lowStock.length} item${lowStock.length>1?'s':''} low:</strong> ${lowStock.map(i=>i.name).join(', ')}</div>`:''}
+  ${inv.length===0?`<div class="empty fu1"><div class="empty-icon">🧵</div><div class="empty-title">No inventory items yet</div><div class="empty-sub">Track your fabrics, threads, and materials</div><button class="btn btn-primary" style="margin-top:12px;" onclick="showInventoryModal()">+ Add Material</button></div>`
+  :`<div class="kanban fu1">${inv.map(item=>{
+    const pct=item.max_qty?Math.min(100,Math.round(item.qty/item.max_qty*100)):100;
+    const isLow=item.qty<=item.min_qty;
+    return `<div class="card" style="border-top:3px solid ${isLow?'var(--rose)':'var(--gold)'};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;">${esc(item.name)}</div>
+          <div style="font-size:12px;color:var(--t2);">${esc(item.category||'General')} · ${esc(item.unit||'metres')}</div>
+        </div>
+        ${isLow?'<span class="badge" style="background:var(--rose2);color:var(--rose);">Low</span>':'<span class="badge badge-fitting">In Stock</span>'}
+      </div>
+      <div class="grid3" style="gap:8px;margin-bottom:12px;">
+        <div style="text-align:center;background:var(--cream);border-radius:var(--r);padding:8px;">
+          <div style="font-size:20px;font-weight:700;color:${isLow?'var(--rose)':'var(--t1)'};">${item.qty}</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;">Current</div>
+        </div>
+        <div style="text-align:center;background:var(--cream);border-radius:var(--r);padding:8px;">
+          <div style="font-size:20px;font-weight:700;">${item.min_qty||0}</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;">Minimum</div>
+        </div>
+        <div style="text-align:center;background:var(--cream);border-radius:var(--r);padding:8px;">
+          <div style="font-size:14px;font-weight:700;color:var(--gold4);">${item.cost?'GHS '+item.cost:''}</div>
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;">Per ${esc(item.unit||'m')}</div>
+        </div>
+      </div>
+      <div class="pbar" style="margin-bottom:4px;"><div class="pfill" style="width:${pct}%;background:${isLow?'var(--rose)':'var(--gold)'};"></div></div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:10px;">${pct}% remaining</div>
+      ${item.supplier?`<div style="font-size:12px;color:var(--t2);margin-bottom:10px;">🏪 ${esc(item.supplier)}</div>`:''}
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" style="flex:1;" onclick="showInventoryModal('${item.id}')">✏️ Edit</button>
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="quickAddStock('${item.id}')">+ Stock</button>
+        <button class="btn-icon" style="color:var(--rose);" onclick="deleteInventory('${item.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('')}</div>`}`;
+}
+
+function showInventoryModal(editId=null) {
+  const item=editId?(STATE.inventory||[]).find(x=>x.id===editId):null;
+  const v=f=>item?esc(item[f]||''):'';
+  showModal(`
+  <div class="modal-head"><h2 class="modal-title">${item?'Edit Material':'Add Material'}</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="grid2">
+      <div class="fg"><label class="flabel">Material Name *</label><input id="inv-name" value="${v('name')}" placeholder="Gold Silk Fabric"/></div>
+      <div class="fg"><label class="flabel">Category</label><select id="inv-cat">${['Fabric','Thread','Lining','Embellishment','Zip/Button','Other'].map(c=>`<option${item?.category===c?' selected':''}>${c}</option>`).join('')}</select></div>
+      <div class="fg"><label class="flabel">Current Qty</label><input id="inv-qty" type="number" value="${v('qty')}" placeholder="10"/></div>
+      <div class="fg"><label class="flabel">Unit</label><select id="inv-unit">${['metres','yards','pieces','rolls','kg'].map(u=>`<option${item?.unit===u?' selected':''}>${u}</option>`).join('')}</select></div>
+      <div class="fg"><label class="flabel">Min Stock Alert</label><input id="inv-min" type="number" value="${v('min_qty')}" placeholder="2"/></div>
+      <div class="fg"><label class="flabel">Max Qty</label><input id="inv-max" type="number" value="${v('max_qty')}" placeholder="20"/></div>
+      <div class="fg"><label class="flabel">Cost per Unit (GHS)</label><input id="inv-cost" value="${v('cost')}" placeholder="45"/></div>
+      <div class="fg"><label class="flabel">Colour</label><input id="inv-color" value="${v('color')}" placeholder="Ivory, Gold"/></div>
+    </div>
+    <div class="fg"><label class="flabel">Supplier / Market</label><input id="inv-supplier" value="${v('supplier')}" placeholder="Makola Market, Accra"/></div>
+    <div class="fg"><label class="flabel">Notes</label><textarea id="inv-notes" rows="2">${v('notes')}</textarea></div>
+    <div class="form-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveInventory('${editId||''}')">${item?'Save Changes':'Add Material'}</button>
+    </div>
+  </div>`);
+}
+
+async function saveInventory(editId) {
+  const name=document.getElementById('inv-name').value.trim();
+  if(!name){showToast('Material name required','error');return;}
+  const data={
+    user_id:CURRENT_USER.id,name,
+    category:document.getElementById('inv-cat').value,
+    qty:parseFloat(document.getElementById('inv-qty').value)||0,
+    unit:document.getElementById('inv-unit').value,
+    min_qty:parseFloat(document.getElementById('inv-min').value)||0,
+    max_qty:parseFloat(document.getElementById('inv-max').value)||0,
+    cost:document.getElementById('inv-cost').value.trim()||null,
+    color:document.getElementById('inv-color').value.trim()||null,
+    supplier:document.getElementById('inv-supplier').value.trim()||null,
+    notes:document.getElementById('inv-notes').value.trim()||null,
+  };
+  try {
+    if(editId){
+      const{error}=await sb.from('inventory').update(data).eq('id',editId).eq('user_id',CURRENT_USER.id);
+      if(error)throw error;
+      STATE.inventory=(STATE.inventory||[]).map(i=>i.id===editId?{...i,...data,id:editId}:i);
+      showToast('Material updated','success');
+    }else{
+      const{data:created,error}=await sb.from('inventory').insert({...data,id:uid()}).select().single();
+      if(error)throw error;
+      STATE.inventory=[...(STATE.inventory||[]),created].sort((a,b)=>a.name.localeCompare(b.name));
+      showToast('Material added! 🧵','success');
+    }
+    closeModal();renderInventory();
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+function quickAddStock(id){
+  showModal(`<div class="modal-head"><h2 class="modal-title">+ Add Stock</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <div class="modal-body">
+    <div class="fg"><label class="flabel">Quantity to Add</label><input id="stock-qty" type="number" placeholder="5"/></div>
+    <div class="form-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="addStock('${id}')">Add Stock</button></div>
+  </div>`);
+}
+async function addStock(id){
+  const qty=parseFloat(document.getElementById('stock-qty').value)||0;
+  if(qty<=0){showToast('Enter valid quantity','error');return;}
+  const item=(STATE.inventory||[]).find(i=>i.id===id);
+  if(!item)return;
+  const newQty=item.qty+qty;
+  try{
+    const{error}=await sb.from('inventory').update({qty:newQty}).eq('id',id).eq('user_id',CURRENT_USER.id);
+    if(error)throw error;
+    STATE.inventory=(STATE.inventory||[]).map(i=>i.id===id?{...i,qty:newQty}:i);
+    closeModal();showToast(`+${qty} added to stock`,'success');renderInventory();
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+async function deleteInventory(id){
+  if(!confirm('Delete this material?'))return;
+  try{
+    await sb.from('inventory').delete().eq('id',id).eq('user_id',CURRENT_USER.id);
+    STATE.inventory=(STATE.inventory||[]).filter(i=>i.id!==id);
+    showToast('Material deleted','info');renderInventory();
+  }catch(e){showToast('Error: '+e.message,'error');}
+}
+
+/* ═══════════════════════════════════════════════
+   ANALYTICS
+═══════════════════════════════════════════════ */
+function renderAnalytics() {
+  const el=document.getElementById('page-analytics');
+  const currency=STATE.settings?.currency||'GHS';
+  const revenue=STATE.orders.filter(o=>o.status==='Delivered').reduce((s,o)=>{const m=(o.price||'').replace(/[^\d]/g,'');return s+(parseInt(m)||0);},0);
+  const avgOrder=STATE.orders.length?Math.round(STATE.orders.reduce((s,o)=>{const m=(o.price||'').replace(/[^\d]/g,'');return s+(parseInt(m)||0);},0)/STATE.orders.length):0;
+  const topClients=[...STATE.clients].map(c=>{
+    const spent=getClientOrders(c.id).filter(o=>o.status==='Delivered').reduce((s,o)=>{const m=(o.price||'').replace(/[^\d]/g,'');return s+(parseInt(m)||0);},0);
+    return {...c,spent};
+  }).filter(c=>c.spent>0).sort((a,b)=>b.spent-a.spent).slice(0,5);
+  const maxSpent=topClients[0]?.spent||1;
+  const statusData=['Inquiry','In Progress','Fitting','Complete','Delivered'].map(s=>({s,n:STATE.orders.filter(o=>o.status===s).length}));
+
+  el.innerHTML=`
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div><h1 class="topbar-title">Analytics</h1><p class="topbar-sub">Studio performance overview</p></div>
+    </div>
+  </div>
+  <div class="grid4 fu1" style="margin-bottom:28px;">
+    ${[
+      {icon:'💰',v:currency+' '+revenue.toLocaleString(),l:'Total Revenue',c:'var(--green)'},
+      {icon:'📦',v:STATE.orders.length,l:'Total Orders',c:'var(--charcoal)'},
+      {icon:'👥',v:STATE.clients.length,l:'Total Clients',c:'var(--blue)'},
+      {icon:'📊',v:currency+' '+avgOrder.toLocaleString(),l:'Avg Order Value',c:'var(--gold4)'},
+    ].map(s=>`<div class="stat-card"><div class="stat-icon">${s.icon}</div><div class="stat-value" style="font-size:26px;color:${s.c};">${s.v}</div><div class="stat-label">${s.l}</div></div>`).join('')}
+  </div>
+  <div class="analytics-grid fu2">
+    <div class="card">
+      <h3 style="font-size:20px;margin-bottom:18px;">Orders by Status</h3>
+      ${statusData.map(({s,n})=>{
+        const pct=STATE.orders.length?(n/STATE.orders.length*100).toFixed(0):0;
+        return `<div style="margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;">
+            <span>${statusBadge(s)}</span><span style="font-weight:600;">${n} (${pct}%)</span>
+          </div>
+          <div class="pbar"><div class="pfill" style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card">
+      <h3 style="font-size:20px;margin-bottom:18px;">Top Clients by Spend</h3>
+      ${topClients.length===0?'<p style="color:var(--t3);font-size:13px;">No completed orders yet</p>'
+      :topClients.map((c,i)=>{
+        const[bg,fg]=avatarColor(c.name);
+        return `<div class="top-client-item">
+          <div class="top-rank">${i+1}</div>
+          <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${bg};color:${fg};">${initials(c.name)}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:13px;">${esc(c.name)}</div>
+            <div class="pbar" style="margin-top:3px;"><div class="pfill" style="width:${(c.spent/maxSpent*100).toFixed(0)}%"></div></div>
+          </div>
+          <div style="font-weight:700;font-size:14px;color:var(--gold);white-space:nowrap;">${currency} ${c.spent.toLocaleString()}</div>
+          ${tierBadge(c.tier||'Standard')}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════ */
+function renderSettings() {
+  const el=document.getElementById('page-settings');
+  el.innerHTML=`
+  <div class="topbar fu">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div><h1 class="topbar-title">Settings</h1><p class="topbar-sub">Manage your studio preferences</p></div>
+    </div>
+  </div>
+  <div style="max-width:600px;">
+    <div class="card fu1" style="margin-bottom:20px;">
+      <h3 style="font-size:20px;margin-bottom:18px;">Studio Profile</h3>
+      <div class="fg"><label class="flabel">Studio Name</label><input id="s-name" value="${esc(STATE.settings?.studioName||'Atelier Studio')}"/></div>
+      <div class="fg"><label class="flabel">Designer Name</label><input id="s-designer" value="${esc(STATE.settings?.designer||'')}"/></div>
+      <div class="grid2">
+        <div class="fg"><label class="flabel">Phone</label><input id="s-phone" value="${esc(STATE.settings?.phone||'')}" placeholder="+233 24 000 0000"/></div>
+        <div class="fg"><label class="flabel">Email</label><input id="s-email" type="email" value="${esc(STATE.settings?.email||'')}" placeholder="studio@email.com"/></div>
+      </div>
+      <div class="fg"><label class="flabel">Address</label><input id="s-address" value="${esc(STATE.settings?.address||'')}" placeholder="Accra, Ghana"/></div>
+      <div class="fg"><label class="flabel">Currency</label>
+        <select id="s-currency">${['GHS','USD','EUR','GBP','NGN'].map(c=>`<option${c===STATE.settings?.currency?' selected':''}>${c}</option>`).join('')}</select>
+      </div>
+      <button class="btn btn-primary" onclick="saveSettings()">Save Changes</button>
+    </div>
+
+    <div class="card fu2" style="margin-bottom:20px;">
+      <h3 style="font-size:20px;margin-bottom:6px;">✨ AI Integration</h3>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:16px;">Add your Anthropic API key to activate Aria, your AI studio assistant.</p>
+      <div class="fg"><label class="flabel">Anthropic API Key</label><input type="password" id="s-apikey" value="${esc(STATE.apiKey)}" placeholder="sk-ant-…"/></div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ai" onclick="saveApiKeyFromSettings()">✨ Save API Key</button>
+        ${STATE.apiKey?`<button class="btn btn-ghost" onclick="clearApiKey()">Clear Key</button>`:''}
+      </div>
+      ${STATE.apiKey?`<p style="font-size:12px;color:var(--green);margin-top:10px;">✅ API key is set. Aria is active!</p>`:`<p style="font-size:12px;color:var(--t3);margin-top:10px;">Get your free API key at <strong>console.anthropic.com</strong></p>`}
+    </div>
+
+    <div class="card fu3" style="margin-bottom:20px;">
+      <h3 style="font-size:20px;margin-bottom:6px;">Data Management</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn btn-ghost" onclick="exportData()">📥 Export Data</button>
+        <button class="btn btn-danger" onclick="confirmResetData()">⚠️ Reset All Data</button>
+      </div>
+    </div>
+
+    <div class="card fu4" style="margin-bottom:20px;">
+      <h3 style="font-size:20px;margin-bottom:6px;">Account</h3>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:16px;">Signed in as <strong>${esc(CURRENT_USER?.email||'')}</strong></div>
+      <button class="btn btn-danger" onclick="doSupabaseLogout()">🚪 Sign Out</button>
+    </div>
+
+    <div class="download-app-card fu5">
+      <h3 style="font-size:20px;margin-bottom:6px;background:linear-gradient(135deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">📲 Download & Install Atelier</h3>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:16px;">Get the full app experience on any device</p>
+      <button class="btn btn-primary" onclick="downloadAppFile()">⬇️ Download Atelier CRM</button>
+      <p style="font-size:11px;color:var(--t3);margin-top:8px;">📁 Single file · Works offline · No installation needed</p>
+    </div>
+  </div>`;
+}
+
+async function saveSettings() {
+  STATE.settings.studioName = document.getElementById('s-name').value.trim()||'Atelier Studio';
+  STATE.settings.designer   = document.getElementById('s-designer').value.trim();
+  STATE.settings.currency   = document.getElementById('s-currency').value;
+  STATE.settings.phone      = document.getElementById('s-phone')?.value.trim()||'';
+  STATE.settings.email      = document.getElementById('s-email')?.value.trim()||'';
+  STATE.settings.address    = document.getElementById('s-address')?.value.trim()||'';
+  await fsProfile({ settings: STATE.settings });
+  showToast('Settings saved ✅','success');
+}
+
+async function saveApiKeyFromSettings() {
+  const key=document.getElementById('s-apikey').value.trim();
+  STATE.apiKey=key;
+  await fsProfile({ api_key: key });
+  showToast(key?'API key saved! Aria is now active ✨':'API key cleared','success');
+  renderSettings();
+  if(key) document.getElementById('ai-key-section').style.display='none';
+}
+
+function clearApiKey() {
+  STATE.apiKey='';
+  fsProfile({ api_key: '' });
+  showToast('API key cleared','info');
+  renderSettings();
+}
+
+function exportData() {
+  const data = JSON.stringify({ clients:STATE.clients,orders:STATE.orders,appts:STATE.appts },null,2);
+  const blob = new Blob([data],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='atelier-data.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('Data exported','success');
+}
+
+function confirmResetData() {
+  if(confirm('Reset all data? This will permanently delete all clients, orders, and appointments. This cannot be undone.')) {
+    STATE.clients=[]; STATE.orders=[]; STATE.appts=[]; STATE.inventory=[];
+    save(); showToast('Data reset','info'); renderSettings();
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   AI — CLAUDE INTEGRATION
+═══════════════════════════════════════════════ */
+function toggleAI() { document.getElementById('ai-panel').classList.toggle('open'); }
+
+function saveApiKey() {
+  const key=document.getElementById('ai-key-input').value.trim();
+  if(!key){showToast('Enter a valid API key','error');return;}
+  STATE.apiKey=key;
+  fsProfile({ api_key: key });
+  document.getElementById('ai-key-section').style.display='none';
+  showToast('API key saved! Aria is active ✨','success');
+}
+
+async function callClaude(systemPrompt, userMessage) {
+  if(!STATE.apiKey) return 'Please add your Anthropic API key in Settings to activate Aria.';
+  try {
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':STATE.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1024,system:systemPrompt,messages:[{role:'user',content:userMessage}]})
+    });
+    if(!res.ok){const err=await res.json().catch(()=>({}));if(res.status===401)return'Invalid API key.';if(res.status===429)return'Rate limit reached. Please wait.';return'API error: '+(err.error?.message||res.statusText);}
+    const data=await res.json();
+    return data.content.map(b=>b.type==='text'?b.text:'').join('');
+  } catch(e) { return'Connection error. Please check your internet.'; }
+}
+
+async function sendAIMsg(preset) {
+  const inp=document.getElementById('ai-input');
+  const msg=preset||inp.value.trim();
+  if(!msg) return;
+  if(inp) inp.value='';
+  appendAIMsg('user',msg);
+  const typingId='typing-'+uid();
+  appendAITyping(typingId);
+  const ctx=`The studio has ${STATE.clients.length} clients, ${STATE.orders.length} orders (${STATE.orders.filter(o=>o.status!=='Delivered').length} active), and ${STATE.appts.filter(a=>a.date>=today.toISOString().split('T')[0]).length} upcoming appointments. VIP clients: ${STATE.clients.filter(c=>c.tier==='VIP').map(c=>c.name).join(', ')||'none'}.`;
+  const system=`You are Aria, the AI studio assistant for Atelier — a luxury fashion designer CRM. ${ctx} You are elegant, professional, warm, and deeply knowledgeable about fashion, fabrics, Ghanaian fashion culture, and client management. Keep responses concise but helpful. Always respond in a premium, tailored way.`;
+  const reply=await callClaude(system,msg);
+  removeTyping(typingId);
+  appendAIMsg('aria',reply);
+}
+
+function appendAIMsg(role,text) {
+  const msgs=document.getElementById('ai-msgs');
+  const div=document.createElement('div');
+  div.className=`ai-msg ${role} fi`;
+  if(role==='aria') div.innerHTML=`<div class="ai-msg-avatar">A</div><div class="ai-msg-bubble">${esc(text).replace(/\n/g,'<br/>')}</div>`;
+  else div.innerHTML=`<div class="ai-msg-bubble">${esc(text)}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+function appendAITyping(id) {
+  const msgs=document.getElementById('ai-msgs');
+  const div=document.createElement('div');
+  div.className='ai-msg aria'; div.id=id;
+  div.innerHTML=`<div class="ai-msg-avatar">A</div><div class="ai-typing"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>`;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight;
+}
+function removeTyping(id){const el=document.getElementById(id);if(el)el.remove();}
+
+async function generateInsights(clientId) {
+  const c=getClient(clientId); if(!c)return;
+  const result=document.getElementById('ai-insights-result');
+  result.innerHTML=`<div class="ai-shimmer" style="width:100%;"></div><div class="ai-shimmer" style="width:80%;"></div><p style="font-size:12px;color:var(--t3);font-style:italic;">Analysing ${esc(c.name)}'s profile…</p>`;
+  const cOrders=getClientOrders(clientId);
+  const prompt=`Generate style insights for: ${c.name}, Tier: ${c.tier}, Budget: ${c.budget}, Tags: ${(c.tags||[]).join(', ')}, Style: Colors: ${c.style_prefs?.colors}, Fabrics: ${c.style_prefs?.fabrics}. Measurements: Bust ${c.measurements?.bust}, Waist ${c.measurements?.waist}, Hips ${c.measurements?.hips}. Orders: ${cOrders.map(o=>o.item+' ('+o.status+')').join(', ')||'None'}. Provide: 1) 2-sentence style profile, 2) 3 recommended pieces, 3) 2 fitting notes, 4) One follow-up action.`;
+  const reply=await callClaude('You are Aria, a luxury fashion studio AI. Provide concise, elegant insights. Format with emoji headings.',prompt);
+  result.innerHTML=`<div class="ai-result">${esc(reply).replace(/\n/g,'<br/>')}</div><p style="font-size:10px;color:var(--gold);margin-top:8px;text-align:right;">✨ Powered by Aria · Claude AI</p><button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="generateInsights('${clientId}')">🔄 Regenerate</button>`;
+}
+
+/* ═══════════════════════════════════════════════
+   BIRTHDAY REMINDERS
+═══════════════════════════════════════════════ */
+function checkBirthdays() {
+  const todayM=today.getMonth()+1, todayD=today.getDate();
+  STATE.clients.forEach(c=>{
+    if(!c.birthday) return;
+    const parts=c.birthday.split('-');
+    const bM=parseInt(parts[1]), bD=parseInt(parts[2]);
+    const bDate=new Date(today.getFullYear(),bM-1,bD);
+    const diff=Math.ceil((bDate-today)/(1000*60*60*24));
+    if(diff>=0&&diff<=7){
+      const msg=diff===0?`🎂 Today is ${c.name}'s birthday!`:`🎂 ${c.name}'s birthday in ${diff} day${diff>1?'s':''}!`;
+      setTimeout(()=>showToast(msg,'info'),2000+Math.random()*2000);
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════
+   PWA — INSTALL
+═══════════════════════════════════════════════ */
+let deferredInstallPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); deferredInstallPrompt=e;
+  setTimeout(()=>{
+    if(localStorage.getItem('atelier_installDismissed')!=='true') {
+      document.getElementById('install-banner').classList.add('show');
+    }
+  },5000);
+});
+async function installApp() {
+  document.getElementById('install-banner').classList.remove('show');
+  if(deferredInstallPrompt){deferredInstallPrompt.prompt();const r=await deferredInstallPrompt.userChoice;if(r.outcome==='accepted'){showToast('Installing Atelier! 🎉','success');deferredInstallPrompt=null;}}
+  else showToast('Use your browser menu → "Add to Home Screen"','info');
+}
+function dismissInstall(){document.getElementById('install-banner').classList.remove('show');localStorage.setItem('atelier_installDismissed','true');}
+window.addEventListener('appinstalled',()=>{showToast('Atelier installed! ✨','success');});
+
+/* ═══════════════════════════════════════════════
+   DOWNLOAD APP FILE
+═══════════════════════════════════════════════ */
+function downloadAppFile() {
+  try{
+    const html=document.documentElement.outerHTML;
+    const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='Atelier-Fashion-CRM.html';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('App downloaded! Open in any browser. 📁','success');
+  }catch(e){showToast('Download failed. Try right-click → Save Page As.','error');}
+}
+
+// Keyboard shortcuts on auth screens
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  if(document.getElementById('screen-login').style.display!=='none')  doSupabaseLogin();
+  if(document.getElementById('screen-signup').style.display!=='none') doSupabaseSignup();
+});
+</script>
+</body>
+</html>
